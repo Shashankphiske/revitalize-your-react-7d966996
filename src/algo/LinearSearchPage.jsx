@@ -1,24 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import CodeViewer from "../CodeViewer";
-
+import ControlButtons from "../ControlButtons";
+import { AlgoPageHeader, AlgoExplanation, AlgoVisualizationContainer } from "../AlgoPageTemplate";
 
 const LINEAR_SEARCH_CODE = [
-  "function linearSearch(arr, target) {",
-  "  for (let i = 0; i < arr.length; i++) {",
-  "    if (arr[i] === target) {",
-  "      return i;",
-  "    }",
-  "  }",
-  "  return -1;",
-  "}",
+  "function linearSearch(arr, target) {", "  for (let i = 0; i < arr.length; i++) {",
+  "    if (arr[i] === target) {", "      return i;", "    }", "  }", "  return -1;", "}",
 ];
-
-const getHighlightedLine = (step) => {
-  if (!step) return null;
-  if (step.found) return 3;
-  if (step.index >= 0) return 2;
-  return 6;
-};
+const getHighlightedLine = (step) => { if (!step) return null; if (step.found) return 3; if (step.index >= 0) return 2; return 6; };
 
 const LinearSearchPage = () => {
   const [input, setInput] = useState("12,45,23,67,89,34,56,78,90,11");
@@ -30,193 +19,85 @@ const LinearSearchPage = () => {
   const [explanation, setExplanation] = useState("");
   const [error, setError] = useState("");
   const [highlightedLine, setHighlightedLine] = useState(null);
-
   const timerRef = useRef(null);
 
-  const fetchLinearSearchSteps = async (arr, num) => {
-    const res = await fetch("http://localhost:3000/searchingalgo/linearsearch", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ arr: JSON.stringify(arr), num: parseInt(num) }),
-    });
-
-    const data = await res.json();
-    return data.arr;
+  const fetchSteps = async (arr, num) => {
+    const res = await fetch("http://localhost:3000/searchingalgo/linearsearch", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ arr: JSON.stringify(arr), num: parseInt(num) }) });
+    return (await res.json()).arr;
   };
 
   const handlePlay = async () => {
     if (isPlaying) return;
-
     if (steps.length === 0) {
-      const parsedArray = input.split(",").map(n => Number(n.trim())).filter(n => !isNaN(n));
-      const targetNum = Number(target.trim());
-
-      if (parsedArray.length === 0) {
-        setError("Invalid array! Please enter comma-separated numbers");
-        return;
-      }
-      if (isNaN(targetNum)) {
-        setError("Invalid target! Please enter a valid number");
-        return;
-      }
-      setError("");
-
-      setArray(parsedArray);
-      setCurrentStepIndex(0);
-      setExplanation("Starting Linear Search...");
-
-      const backendSteps = await fetchLinearSearchSteps(parsedArray, target);
-      setSteps(backendSteps);
+      const parsed = input.split(",").map(n => Number(n.trim())).filter(n => !isNaN(n));
+      if (parsed.length === 0) { setError("Invalid array!"); return; }
+      if (isNaN(Number(target))) { setError("Invalid target!"); return; }
+      setError(""); setArray(parsed); setCurrentStepIndex(0); setExplanation("Starting Linear Search...");
+      setSteps(await fetchSteps(parsed, target));
     }
-
     setIsPlaying(true);
   };
 
-  const handlePause = () => {
-    setIsPlaying(false);
-    clearTimeout(timerRef.current);
-  };
-
-  const handleReplay = () => {
-    clearTimeout(timerRef.current);
-    setIsPlaying(false);
-    setSteps([]);
-    setArray([]);
-    setCurrentStepIndex(0);
-    setExplanation("");
-    setError("");
-  };
+  const handlePause = () => { setIsPlaying(false); clearTimeout(timerRef.current); };
+  const handleReplay = () => { clearTimeout(timerRef.current); setIsPlaying(false); setSteps([]); setArray([]); setCurrentStepIndex(0); setExplanation(""); setError(""); };
 
   useEffect(() => {
     if (!isPlaying || currentStepIndex >= steps.length) return;
-
     timerRef.current = setTimeout(() => {
       const step = steps[currentStepIndex];
       setArray(step.arr);
-      setExplanation(generateExplanation(step));
+      setExplanation(step.found ? `Found ${target} at index ${step.index}!` : `Checking index ${step.index}: ${step.arr[step.index]} ≠ ${target}`);
       setHighlightedLine(getHighlightedLine(step));
       setCurrentStepIndex((prev) => prev + 1);
     }, 1000);
-
     return () => clearTimeout(timerRef.current);
   }, [isPlaying, currentStepIndex, steps]);
 
   const currentStep = steps[currentStepIndex - 1] || {};
   const { index = -1, found = false } = currentStep;
-
-  const generateExplanation = (step) => {
-    if (step.found) {
-      return `Found ${target} at index ${step.index}!`;
-    }
-
-    return `Checking index ${step.index}: ${step.arr[step.index]} ≠ ${target}`;
-  };
+  const inputStyle = { background: 'hsl(220 20% 6%)', border: '1px solid hsl(220 14% 22%)', color: 'hsl(0 0% 96%)' };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8 pt-25">
-      <h1 className="text-3xl font-bold text-center mb-6">
-        Linear Search Visualization
-      </h1>
+    <div className="min-h-screen pt-32 pb-16 px-6" style={{ color: 'hsl(0 0% 96%)' }}>
+      <AlgoPageHeader icon="🔍" title="Linear Search" description="Linear Search checks each element sequentially until the target is found or the end is reached." complexity={{ time: "O(n)", space: "O(1)" }} />
 
-      <div className="max-w-4xl mx-auto bg-gray-800 p-6 rounded mb-6">
-        <h2 className="text-xl font-semibold mb-2">About Linear Search</h2>
-        <p className="text-gray-300 text-sm">
-          Linear Search sequentially checks each element in the array until the target value is found or the end is reached.
-        </p>
-        <p className="text-gray-400 text-sm mt-2">
-          ⏱ O(n) Time | 🧠 O(1) Space
-        </p>
-      </div>
-
-      <div className="flex justify-center gap-4 mb-6 flex-wrap items-start">
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-400">Demo Array: 12,45,23,67,89,34,56,78,90,11 | Target: 56</label>
-          <div className="flex gap-2">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              disabled={isPlaying}
-              placeholder="Array: 1,3,5,7,9"
-              className="px-4 py-2 rounded bg-gray-800 border border-gray-600 w-64"
-            />
-            <input
-              value={target}
-              onChange={(e) => setTarget(e.target.value)}
-              disabled={isPlaying}
-              placeholder="Target: 7"
-              className="px-4 py-2 rounded bg-gray-800 border border-gray-600 w-32"
-            />
+      <div className="max-w-5xl mx-auto mb-8">
+        <div className="card rounded-2xl p-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
+            <div className="flex-1">
+              <label className="text-sm mb-2 block" style={{ color: 'hsl(220 10% 50%)' }}>Array</label>
+              <input value={input} onChange={(e) => setInput(e.target.value)} disabled={isPlaying} className="w-full px-4 py-3 rounded-xl outline-none" style={inputStyle} />
+            </div>
+            <div>
+              <label className="text-sm mb-2 block" style={{ color: 'hsl(220 10% 50%)' }}>Target</label>
+              <input value={target} onChange={(e) => setTarget(e.target.value)} disabled={isPlaying} className="px-4 py-3 rounded-xl w-32 outline-none" style={inputStyle} />
+            </div>
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && <p className="text-sm mt-2" style={{ color: 'hsl(0 72% 58%)' }}>{error}</p>}
         </div>
-        
-        <button onClick={handlePlay} disabled={isPlaying} className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold hover:scale-105 transition-all flex items-center gap-2 mt-6">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-          </svg>
-          Play
-        </button>
-        <button onClick={handlePause} disabled={!isPlaying} className="px-6 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold hover:scale-105 transition-all flex items-center gap-2 mt-6">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M5 4a2 2 0 012-2h2a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V4zM13 4a2 2 0 012-2h2a2 2 0 012 2v12a2 2 0 01-2 2h-2a2 2 0 01-2-2V4z" />
-          </svg>
-          Pause
-        </button>
-        <button onClick={handleReplay} className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 font-semibold hover:scale-105 transition-all flex items-center gap-2 mt-6">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-          </svg>
-          Replay
-        </button>
       </div>
 
-      <div className="max-w-4xl mx-auto bg-gray-800 p-4 rounded mb-6 text-center">
-        <p className="text-lg text-blue-300 font-medium">
-          {explanation || "Click Play to start the visualization"}
-        </p>
-      </div>
-
+      <ControlButtons onPlay={handlePlay} onPause={handlePause} onReplay={handleReplay} disabled={isPlaying} />
+      <AlgoExplanation explanation={explanation} isPlaying={isPlaying} />
 
       <div className="algo-split-layout">
         <div className="algo-visualization-panel">
-      <div className="flex justify-center items-center gap-4 bg-gray-800 p-8 rounded max-w-5xl mx-auto">
-        {array.map((value, idx) => {
-          let bgColor = "bg-blue-500";
-          let scale = "scale-100";
-          let shadow = "";
-
-          if (idx === index && found) {
-            bgColor = "bg-green-500";
-            scale = "scale-125";
-            shadow = "shadow-2xl shadow-green-500/80";
-          } else if (idx === index) {
-            bgColor = "bg-yellow-400";
-            scale = "scale-125";
-            shadow = "shadow-2xl shadow-yellow-400/80";
-          } else if (idx < index) {
-            bgColor = "bg-gray-600";
-            scale = "scale-95";
-          }
-
-          return (
-            <div
-              key={idx}
-              className={`
-                w-16 h-16 flex items-center justify-center
-                text-xl font-bold text-black rounded
-                transition-all duration-500
-                ${bgColor} ${scale} ${shadow}
-              `}
-            >
-              {value}
+          <AlgoVisualizationContainer>
+            <div className="flex justify-center items-center gap-3 flex-wrap">
+              {array.map((value, idx) => {
+                let bg = "hsl(220 60% 55%)"; let scale = "scale(1)"; let shadow = "none"; let textColor = "hsl(220 20% 6%)";
+                if (idx === index && found) { bg = "hsl(145 65% 48%)"; scale = "scale(1.25)"; shadow = "0 0 20px hsl(145 65% 48% / 0.8)"; }
+                else if (idx === index) { bg = "hsl(40 90% 55%)"; scale = "scale(1.25)"; shadow = "0 0 20px hsl(40 90% 55% / 0.8)"; }
+                else if (idx < index) { bg = "hsl(220 14% 22%)"; textColor = "hsl(220 10% 50%)"; scale = "scale(0.95)"; }
+                return (
+                  <div key={idx} className="w-16 h-16 flex items-center justify-center rounded-xl transition-all duration-500 font-bold text-xl"
+                    style={{ background: bg, color: textColor, transform: scale, boxShadow: shadow }}>{value}</div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
+          </AlgoVisualizationContainer>
         </div>
-        <div className="algo-code-panel">
-          <CodeViewer code={LINEAR_SEARCH_CODE} highlightedLine={highlightedLine} title="linear-search.js" />
-        </div>
+        <div className="algo-code-panel"><CodeViewer code={LINEAR_SEARCH_CODE} highlightedLine={highlightedLine} title="linear-search.js" /></div>
       </div>
     </div>
   );

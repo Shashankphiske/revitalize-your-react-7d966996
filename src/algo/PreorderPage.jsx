@@ -1,328 +1,69 @@
 import React, { useState, useEffect, useRef } from "react";
 import CodeViewer from "../CodeViewer";
+import ControlButtons from "../ControlButtons";
+import { AlgoPageHeader, AlgoExplanation, AlgoVisualizationContainer } from "../AlgoPageTemplate";
 
+const CODE = ["function preorder(node) {", "  if (node === null) return;", "  visit(node);", "  preorder(node.left);", "  preorder(node.right);", "}"];
 
-const PREORDER_CODE = [
-  "function preorder(node) {",
-  "  if (node === null) return;",
-  "  visit(node);",
-  "  preorder(node.left);",
-  "  preorder(node.right);",
-  "}",
-];
-
-const PostorderPage = () => {
-  /* ================= TREE INPUT ================= */
+const PreorderPage = () => {
   const [nodes, setNodes] = useState([
-    { node: "1", left: "2", right: "3" },
-    { node: "2", left: "4", right: "5" },
-    { node: "3", left: "", right: "" },
-    { node: "4", left: "", right: "" },
-    { node: "5", left: "", right: "" },
+    { node: "1", left: "2", right: "3" }, { node: "2", left: "4", right: "5" },
+    { node: "3", left: "", right: "" }, { node: "4", left: "", right: "" }, { node: "5", left: "", right: "" },
   ]);
+  const [steps, setSteps] = useState([]); const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false); const [explanation, setExplanation] = useState("");
+  const [error, setError] = useState(""); const timerRef = useRef(null);
 
-  const [steps, setSteps] = useState([]);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [explanation, setExplanation] = useState("");
-  const [error, setError] = useState("");
+  const buildAdjList = () => { const adj = {}; for (let n of nodes) { if (!n.node) continue; adj[n.node] = [n.left || null, n.right || null]; } return adj; };
+  const findRoot = (adj) => { const ch = new Set(); for (let k in adj) { const [l, r] = adj[k]; if (l) ch.add(l); if (r) ch.add(r); } return Object.keys(adj).find((k) => !ch.has(k)); };
+  const fetchSteps = async (adj) => { const res = await fetch("http://localhost:3000/treealgo/preorder", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ adj }) }); return (await res.json()).arr; };
 
-  const timerRef = useRef(null);
+  const handlePlay = async () => { if (isPlaying) return; try { const adj = buildAdjList(); if (!Object.keys(adj).length) { setError("Tree empty"); return; } setError(""); setCurrentStepIndex(0); setExplanation("Starting Preorder (Root → Left → Right)"); setSteps(await fetchSteps(adj)); setIsPlaying(true); } catch { setError("Invalid tree"); } };
+  const handlePause = () => { setIsPlaying(false); clearTimeout(timerRef.current); };
+  const handleReplay = () => { clearTimeout(timerRef.current); setIsPlaying(false); setSteps([]); setCurrentStepIndex(0); setExplanation(""); };
 
-  /* ================= BUILD ADJ LIST ================= */
-  const buildAdjList = () => {
-    const adj = {};
-    for (let n of nodes) {
-      if (!n.node) continue;
-      adj[n.node] = [
-        n.left ? n.left : null,
-        n.right ? n.right : null,
-      ];
-    }
-    return adj;
-  };
+  useEffect(() => { if (!isPlaying || currentStepIndex >= steps.length) { if (currentStepIndex >= steps.length && steps.length > 0) setExplanation(`Complete: [${steps.join(", ")}]`); return; } timerRef.current = setTimeout(() => { setExplanation(`Visiting node ${steps[currentStepIndex]}`); setCurrentStepIndex((p) => p + 1); }, 1200); return () => clearTimeout(timerRef.current); }, [isPlaying, currentStepIndex, steps]);
 
-  /* ================= FIND ROOT ================= */
-  const findRoot = (adj) => {
-    const children = new Set();
-    for (let key in adj) {
-      const [l, r] = adj[key];
-      if (l) children.add(l);
-      if (r) children.add(r);
-    }
-    return Object.keys(adj).find((k) => !children.has(k));
-  };
+  const adj = buildAdjList(); const root = findRoot(adj);
+  const positions = {}; const edges = [];
+  const buildPos = (node, x, y, gap) => { if (!node || positions[node]) return; positions[node] = { x, y }; const [l, r] = adj[node] || []; if (l) { edges.push([node, l]); buildPos(l, x - gap, y + 80, gap / 2); } if (r) { edges.push([node, r]); buildPos(r, x + gap, y + 80, gap / 2); } };
+  if (root) buildPos(root, 400, 60, 160);
+  const visitedSet = new Set(steps.slice(0, currentStepIndex)); const currentNode = steps[currentStepIndex - 1];
+  const inputStyle = { background: 'hsl(220 20% 6%)', border: '1px solid hsl(220 14% 22%)', color: 'hsl(0 0% 96%)' };
 
-  /* ================= FETCH ================= */
-  const fetchPostorderSteps = async (adj) => {
-    const res = await fetch("http://localhost:3000/treealgo/preorder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ adj }),
-    });
-    const data = await res.json();
-    return data.arr;
-  };
-
-  /* ================= PLAY ================= */
-  const handlePlay = async () => {
-    if (isPlaying) return;
-
-    try {
-      const adj = buildAdjList();
-      if (Object.keys(adj).length === 0) {
-        setError("Tree cannot be empty");
-        return;
-      }
-
-      setError("");
-      setCurrentStepIndex(0);
-      setExplanation("Starting Postorder Traversal (Left → Right → Root)");
-
-      const backendSteps = await fetchPostorderSteps(adj);
-      setSteps(backendSteps);
-      setIsPlaying(true);
-    } catch {
-      setError("Invalid tree structure");
-    }
-  };
-
-  /* ================= CONTROLS ================= */
-  const handlePause = () => {
-    setIsPlaying(false);
-    clearTimeout(timerRef.current);
-  };
-
-  const handleReplay = () => {
-    clearTimeout(timerRef.current);
-    setIsPlaying(false);
-    setSteps([]);
-    setCurrentStepIndex(0);
-    setExplanation("");
-  };
-
-  /* ================= ANIMATION ================= */
-  useEffect(() => {
-    if (!isPlaying || currentStepIndex >= steps.length) {
-      if (currentStepIndex >= steps.length && steps.length > 0) {
-        setExplanation(`Traversal complete: [${steps.join(", ")}]`);
-      }
-      return;
-    }
-
-    timerRef.current = setTimeout(() => {
-      setExplanation(`Visiting node ${steps[currentStepIndex]}`);
-      setCurrentStepIndex((prev) => prev + 1);
-    }, 1200);
-
-    const highlightedLine = (currentStepIndex > 0 && currentStepIndex <= steps.length) ? 2 : null;
-
-  return () => clearTimeout(timerRef.current);
-  }, [isPlaying, currentStepIndex, steps]);
-
-  /* ================= TREE LAYOUT ================= */
-  const adj = buildAdjList();
-  const root = findRoot(adj);
-
-  const positions = {};
-  const edges = [];
-
-  const buildPositions = (node, x, y, gap) => {
-    if (!node || positions[node]) return;
-
-    positions[node] = { x, y };
-
-    const [left, right] = adj[node] || [];
-
-    if (left) {
-      edges.push([node, left]);
-      buildPositions(left, x - gap, y + 80, gap / 2);
-    }
-
-    if (right) {
-      edges.push([node, right]);
-      buildPositions(right, x + gap, y + 80, gap / 2);
-    }
-  };
-
-  if (root) buildPositions(root, 400, 60, 160);
-
-  const visitedSet = new Set(steps.slice(0, currentStepIndex));
-  const currentNode = steps[currentStepIndex - 1];
-
-  /* ================= UI ================= */
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8 pt-25">
-      <h1 className="text-3xl font-bold text-center mb-2">
-        Preorder Traversal (Binary Tree)
-      </h1>
-
-      <p className="text-center text-gray-400 max-w-3xl mx-auto mb-4">
-        Preorder Traversal is a depth-first traversal technique where nodes are visited
-        in the order <span className="text-white">Root → Left → Right</span>.
-        This traversal is commonly used to create a copy of the tree or to generate
-        prefix expressions.
-      </p>
-
-      <div className="max-w-3xl mx-auto bg-gray-800 rounded-lg p-4 mb-8">
-        <p className="text-gray-300 mb-2">
-          <span className="font-semibold text-white">Time Complexity:</span> O(n)
-        </p>
-        <p className="text-gray-300">
-          <span className="font-semibold text-white">Space Complexity:</span> O(h),
-          where h is the height of the tree (O(log n) for balanced trees, O(n) in the
-          worst case).
-        </p>
+    <div className="min-h-screen pt-32 pb-16 px-6" style={{ color: 'hsl(0 0% 96%)' }}>
+      <AlgoPageHeader icon="🌲" title="Preorder Traversal" description="Preorder visits nodes in Root → Left → Right order. Used to copy trees or generate prefix expressions." complexity={{ time: "O(n)", space: "O(h)" }} />
+      <div className="max-w-5xl mx-auto mb-8">
+        <div className="card rounded-2xl p-6">
+          <h3 className="text-lg font-semibold mb-4 gradient-text-secondary">Tree Input</h3>
+          {nodes.map((n, idx) => (
+            <div key={idx} className="flex gap-3 mb-2 items-center">
+              <input value={n.node} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].node = e.target.value; setNodes(c); }} placeholder="Node" className="px-3 py-2 rounded-xl w-20 outline-none" style={inputStyle} />
+              <input value={n.left} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].left = e.target.value; setNodes(c); }} placeholder="Left" className="px-3 py-2 rounded-xl w-20 outline-none" style={inputStyle} />
+              <input value={n.right} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].right = e.target.value; setNodes(c); }} placeholder="Right" className="px-3 py-2 rounded-xl w-20 outline-none" style={inputStyle} />
+              <button disabled={isPlaying} onClick={() => { const d = nodes[idx].node; let u = nodes.filter((_, i) => i !== idx); u = u.map((x) => ({ ...x, left: x.left === d ? "" : x.left, right: x.right === d ? "" : x.right })); setNodes(u); }} className="px-3 py-2 rounded-xl" style={{ background: 'hsl(0 72% 58%)', color: 'hsl(0 0% 96%)' }}>✕</button>
+            </div>
+          ))}
+          <button onClick={() => setNodes([...nodes, { node: "", left: "", right: "" }])} className="mt-3 px-4 py-2 rounded-xl btn-primary">+ Add Node</button>
+          {error && <p className="text-sm mt-3" style={{ color: 'hsl(0 72% 58%)' }}>{error}</p>}
+        </div>
       </div>
-
-
-      {/* INPUT */}
-      <div className="max-w-4xl mx-auto bg-gray-800 p-6 rounded mb-6">
-        <h3 className="text-lg font-semibold mb-4">Tree Input</h3>
-
-        {nodes.map((n, idx) => (
-          <div key={idx} className="flex gap-3 mb-2 items-center">
-            <input
-              value={n.node}
-              disabled={isPlaying}
-              onChange={(e) => {
-                const copy = [...nodes];
-                copy[idx].node = e.target.value;
-                setNodes(copy);
-              }}
-              placeholder="Node"
-              className="px-3 py-2 bg-gray-700 rounded w-20"
-            />
-            <input
-              value={n.left}
-              disabled={isPlaying}
-              onChange={(e) => {
-                const copy = [...nodes];
-                copy[idx].left = e.target.value;
-                setNodes(copy);
-              }}
-              placeholder="Left"
-              className="px-3 py-2 bg-gray-700 rounded w-20"
-            />
-            <input
-              value={n.right}
-              disabled={isPlaying}
-              onChange={(e) => {
-                const copy = [...nodes];
-                copy[idx].right = e.target.value;
-                setNodes(copy);
-              }}
-              placeholder="Right"
-              className="px-3 py-2 bg-gray-700 rounded w-20"
-            />
-            <button
-              disabled={isPlaying}
-              onClick={() => {
-                const del = nodes[idx].node;
-                let updated = nodes.filter((_, i) => i !== idx);
-                updated = updated.map((x) => ({
-                  ...x,
-                  left: x.left === del ? "" : x.left,
-                  right: x.right === del ? "" : x.right,
-                }));
-                setNodes(updated);
-              }}
-              className="px-3 py-2 bg-red-600 rounded"
-            >
-              ✕
-            </button>
-          </div>
-        ))}
-
-        <button
-          onClick={() =>
-            setNodes([...nodes, { node: "", left: "", right: "" }])
-          }
-          className="mt-3 px-4 py-2 bg-blue-600 rounded"
-        >
-          + Add Node
-        </button>
-
-        {error && <p className="text-red-400 mt-3">{error}</p>}
-      </div>
-
-      {/* CONTROLS */}
-      <div className="flex justify-center gap-4 mb-6">
-        <button onClick={handlePlay} className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 font-semibold hover:scale-105 transition-all flex items-center gap-2">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-          </svg>
-          Play
-        </button>
-        <button onClick={handlePause} className="px-6 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 font-semibold hover:scale-105 transition-all flex items-center gap-2">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M5 4a2 2 0 012-2h2a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V4zM13 4a2 2 0 012-2h2a2 2 0 012 2v12a2 2 0 01-2 2h-2a2 2 0 01-2-2V4z" />
-          </svg>
-          Pause
-        </button>
-        <button onClick={handleReplay} className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 font-semibold hover:scale-105 transition-all flex items-center gap-2">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-          </svg>
-          Replay
-        </button>
-      </div>
-
-      {/* EXPLANATION */}
-      <div className="max-w-4xl mx-auto bg-gray-800 p-4 rounded mb-6 text-center">
-        <p className="text-blue-300 font-medium">
-          {explanation || "Click Play to start"}
-        </p>
-      </div>
-
-
+      <ControlButtons onPlay={handlePlay} onPause={handlePause} onReplay={handleReplay} disabled={isPlaying} />
+      <AlgoExplanation explanation={explanation} isPlaying={isPlaying} />
       <div className="algo-split-layout">
         <div className="algo-visualization-panel">
-      {/* TREE SVG */}
-      <div className="flex justify-center">
-        <svg width="800" height="400" className="bg-gray-800 rounded">
-          {/* Edges */}
-          {edges.map(([u, v], i) => (
-            <line
-              key={i}
-              x1={positions[u].x}
-              y1={positions[u].y}
-              x2={positions[v].x}
-              y2={positions[v].y}
-              stroke="#555"
-            />
-          ))}
-
-          {/* Nodes */}
-          {Object.entries(positions).map(([node, pos]) => {
-            let color = "#3b82f6";
-            if (visitedSet.has(node)) color = "#22c55e";
-            if (node === currentNode) color = "#facc15";
-
-            return (
-              <g key={node}>
-                <circle cx={pos.x} cy={pos.y} r="18" fill={color} />
-                <text
-                  x={pos.x}
-                  y={pos.y + 5}
-                  textAnchor="middle"
-                  fill="black"
-                  fontWeight="bold"
-                >
-                  {node}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
+          <AlgoVisualizationContainer>
+            <div className="flex justify-center"><svg width="800" height="400" className="rounded-xl" style={{ background: 'hsl(220 20% 6%)' }}>
+              {edges.map(([u, v], i) => (<line key={i} x1={positions[u].x} y1={positions[u].y} x2={positions[v].x} y2={positions[v].y} stroke="hsl(220 14% 22%)" strokeWidth="1.5" />))}
+              {Object.entries(positions).map(([node, pos]) => { let c = "hsl(220 60% 55%)"; if (visitedSet.has(node)) c = "hsl(145 65% 48%)"; if (node === currentNode) c = "hsl(40 90% 55%)"; return (<g key={node}><circle cx={pos.x} cy={pos.y} r="22" fill={c} style={{ filter: node === currentNode ? 'drop-shadow(0 0 8px hsl(40 90% 55%))' : 'none' }} /><text x={pos.x} y={pos.y + 5} textAnchor="middle" fill="hsl(220 20% 6%)" fontWeight="bold" fontSize="14">{node}</text></g>); })}
+            </svg></div>
+          </AlgoVisualizationContainer>
         </div>
-        <div className="algo-code-panel">
-          <CodeViewer code={PREORDER_CODE} highlightedLine={highlightedLine} title="preorder.js" />
-        </div>
+        <div className="algo-code-panel"><CodeViewer code={CODE} highlightedLine={null} title="preorder.js" /></div>
       </div>
     </div>
   );
 };
 
-export default PostorderPage;
+export default PreorderPage;

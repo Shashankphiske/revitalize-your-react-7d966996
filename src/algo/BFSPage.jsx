@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import CodeViewer from "../CodeViewer";
-
+import ControlButtons from "../ControlButtons";
+import { AlgoPageHeader, AlgoExplanation, AlgoVisualizationContainer } from "../AlgoPageTemplate";
 
 const BFS_CODE = [
   "function bfs(graph, start, target) {",
@@ -39,13 +40,13 @@ const BFSPage = () => {
 
   const [root, setRoot] = useState("0");
   const [target, setTarget] = useState("5");
-
   const [steps, setSteps] = useState([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [visited, setVisited] = useState(new Set());
   const [error, setError] = useState("");
   const [highlightedLine, setHighlightedLine] = useState(null);
+  const [explanation, setExplanation] = useState("");
 
   const timerRef = useRef(null);
 
@@ -54,57 +55,35 @@ const BFSPage = () => {
     for (let item of nodes) {
       const node = item.node.trim();
       if (!node) continue;
-
-      adj[node] = item.neighbors
-        .split(",")
-        .map((n) => n.trim())
-        .filter(Boolean);
+      adj[node] = item.neighbors.split(",").map((n) => n.trim()).filter(Boolean);
     }
     return adj;
   };
 
   const fetchBFSSteps = async (adjList, root, target) => {
-    const res = await fetch(
-      "http://localhost:3000/graphalgo/breadthfirstsearch",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          adjList,
-          root,
-          num: target,
-        }),
-      }
-    );
-
+    const res = await fetch("http://localhost:3000/graphalgo/breadthfirstsearch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ adjList, root, num: target }),
+    });
     const data = await res.json();
     return data.arr;
   };
 
   const handlePlay = async () => {
     if (isPlaying) return;
-
     try {
       const adjList = buildAdjList();
-
-      if (!adjList[root]) {
-        setError(`Root node "${root}" does not exist.`);
-        return;
-      }
-
+      if (!adjList[root]) { setError(`Root node "${root}" does not exist.`); return; }
       for (let u in adjList) {
         for (let v of adjList[u]) {
-          if (!adjList[v]) {
-            setError(`Neighbor "${v}" is not defined as a node.`);
-            return;
-          }
+          if (!adjList[v]) { setError(`Neighbor "${v}" is not defined as a node.`); return; }
         }
       }
-
       setError("");
       setVisited(new Set());
       setCurrentStepIndex(0);
-
+      setExplanation("Starting BFS traversal...");
       const bfsSteps = await fetchBFSSteps(adjList, root, target);
       setSteps(bfsSteps);
       setIsPlaying(true);
@@ -113,26 +92,19 @@ const BFSPage = () => {
     }
   };
 
-  const handlePause = () => {
-    setIsPlaying(false);
-    clearTimeout(timerRef.current);
-  };
-
+  const handlePause = () => { setIsPlaying(false); clearTimeout(timerRef.current); };
   const handleReplay = () => {
-    clearTimeout(timerRef.current);
-    setIsPlaying(false);
-    setSteps([]);
-    setVisited(new Set());
-    setCurrentStepIndex(0);
+    clearTimeout(timerRef.current); setIsPlaying(false); setSteps([]);
+    setVisited(new Set()); setCurrentStepIndex(0); setExplanation("");
   };
 
   useEffect(() => {
     if (!isPlaying || currentStepIndex >= steps.length) return;
-
     timerRef.current = setTimeout(() => {
       const step = steps[currentStepIndex];
       setVisited((prev) => new Set(prev).add(step.num));
       setHighlightedLine(getHighlightedLine(step));
+      setExplanation(step.found ? `🎯 Target node ${target} found!` : `Visiting node ${step.num}`);
       setCurrentStepIndex((i) => i + 1);
     }, 1800);
     return () => clearTimeout(timerRef.current);
@@ -143,218 +115,102 @@ const BFSPage = () => {
 
   const adjList = buildAdjList();
   const nodeKeys = Object.keys(adjList);
-
-  const radius = 160;
-  const cx = 260;
-  const cy = 220;
-
+  const radius = 160, cx = 260, cy = 220;
   const positions = {};
   nodeKeys.forEach((node, i) => {
     const angle = (2 * Math.PI * i) / nodeKeys.length;
-    positions[node] = {
-      x: cx + radius * Math.cos(angle),
-      y: cy + radius * Math.sin(angle),
-    };
+    positions[node] = { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
   });
 
+  const inputStyle = {
+    background: 'hsl(220 20% 6%)',
+    border: '1px solid hsl(220 14% 22%)',
+    color: 'hsl(0 0% 96%)',
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8 pt-25">
-<h1 className="text-3xl font-bold text-center mb-2">
-  Breadth-First Search (BFS)
-</h1>
+    <div className="min-h-screen pt-32 pb-16 px-6" style={{ color: 'hsl(0 0% 96%)' }}>
+      <AlgoPageHeader
+        icon="🌊"
+        title="Breadth-First Search"
+        description="BFS explores nodes level by level, starting from a given source node. It visits all immediate neighbors before moving deeper, using a queue to manage the traversal order."
+        complexity={{ time: "O(V + E)", space: "O(V)" }}
+      />
 
-<p className="text-center text-gray-400 max-w-3xl mx-auto mb-4">
-  Breadth-First Search is a graph traversal algorithm that explores nodes level
-  by level, starting from a given source node. It visits all immediate neighbors
-  before moving deeper, using a queue to manage the traversal order.
-</p>
+      {/* Graph Input */}
+      <div className="max-w-5xl mx-auto mb-8">
+        <div className="card rounded-2xl p-6">
+          <h3 className="text-lg font-semibold mb-4 gradient-text-secondary">Graph Input (Adjacency List)</h3>
+          {nodes.map((item, idx) => (
+            <div key={idx} className="flex gap-3 mb-2 items-center">
+              <input value={item.node} disabled={isPlaying}
+                onChange={(e) => { const copy = [...nodes]; copy[idx].node = e.target.value; setNodes(copy); }}
+                placeholder="Node" className="px-3 py-2 rounded-xl w-24 outline-none transition-all" style={inputStyle} />
+              <input value={item.neighbors} disabled={isPlaying}
+                onChange={(e) => { const copy = [...nodes]; copy[idx].neighbors = e.target.value; setNodes(copy); }}
+                placeholder="Neighbors (comma separated)" className="px-3 py-2 rounded-xl flex-1 outline-none transition-all" style={inputStyle} />
+              <button disabled={isPlaying}
+                onClick={() => {
+                  const nodeToDelete = nodes[idx].node;
+                  let updated = nodes.filter((_, i) => i !== idx);
+                  updated = updated.map((item) => ({ ...item, neighbors: item.neighbors.split(",").map((n) => n.trim()).filter((n) => n && n !== nodeToDelete).join(",") }));
+                  setNodes(updated);
+                }}
+                className="px-3 py-2 rounded-xl font-semibold transition-all" style={{ background: 'hsl(0 72% 58%)', color: 'hsl(0 0% 96%)' }}>✕</button>
+            </div>
+          ))}
+          <button onClick={() => setNodes([...nodes, { node: "", neighbors: "" }])}
+            className="mt-3 px-4 py-2 rounded-xl font-semibold btn-primary">+ Add Node</button>
 
-<div className="max-w-3xl mx-auto bg-gray-800 rounded-lg p-4 mb-8">
-  <p className="text-gray-300 mb-2">
-    <span className="font-semibold text-white">Time Complexity:</span> O(V + E),
-    where V is the number of vertices and E is the number of edges.
-  </p>
-  <p className="text-gray-300">
-    <span className="font-semibold text-white">Space Complexity:</span> O(V),
-    due to the queue and visited set used during traversal.
-  </p>
-</div>
-
-
-      <div className="max-w-4xl mx-auto bg-gray-800 p-6 rounded mb-6">
-        <h2 className="text-xl font-semibold mb-4">
-          Graph Input (Adjacency List)
-        </h2>
-
-        {nodes.map((item, idx) => (
-          <div key={idx} className="flex gap-3 mb-2 items-center">
-            <input
-              value={item.node}
-              disabled={isPlaying}
-              onChange={(e) => {
-                const copy = [...nodes];
-                copy[idx].node = e.target.value;
-                setNodes(copy);
-              }}
-              placeholder="Node"
-              className="px-3 py-2 bg-gray-700 rounded w-24"
-            />
-
-            <input
-              value={item.neighbors}
-              disabled={isPlaying}
-              onChange={(e) => {
-                const copy = [...nodes];
-                copy[idx].neighbors = e.target.value;
-                setNodes(copy);
-              }}
-              placeholder="Neighbors (comma separated)"
-              className="px-3 py-2 bg-gray-700 rounded flex-1"
-            />
-
-            <button
-              disabled={isPlaying}
-              onClick={() => {
-                const nodeToDelete = nodes[idx].node;
-
-                let updated = nodes.filter((_, i) => i !== idx);
-
-                updated = updated.map((item) => ({
-                  ...item,
-                  neighbors: item.neighbors
-                    .split(",")
-                    .map((n) => n.trim())
-                    .filter((n) => n && n !== nodeToDelete)
-                    .join(","),
-                }));
-
-                setNodes(updated);
-              }}
-              className="px-3 py-2 bg-red-600 rounded"
-            >
-              ✕
-            </button>
+          <div className="flex gap-3 mt-4">
+            <div>
+              <label className="text-xs block mb-1" style={{ color: 'hsl(220 10% 50%)' }}>Root</label>
+              <input value={root} onChange={(e) => setRoot(e.target.value)} placeholder="Root"
+                className="px-3 py-2 rounded-xl w-24 outline-none" style={inputStyle} />
+            </div>
+            <div>
+              <label className="text-xs block mb-1" style={{ color: 'hsl(220 10% 50%)' }}>Target</label>
+              <input value={target} onChange={(e) => setTarget(e.target.value)} placeholder="Target"
+                className="px-3 py-2 rounded-xl w-24 outline-none" style={inputStyle} />
+            </div>
           </div>
-        ))}
-
-        <button
-          onClick={() =>
-            setNodes([...nodes, { node: "", neighbors: "" }])
-          }
-          className="mt-3 px-4 py-2 bg-blue-600 rounded"
-        >
-          + Add Node
-        </button>
+          {error && <p className="text-sm mt-2" style={{ color: 'hsl(0 72% 58%)' }}>{error}</p>}
+        </div>
       </div>
 
-      <div className="flex justify-center gap-4 mb-6">
-        <input
-          value={root}
-          onChange={(e) => setRoot(e.target.value)}
-          placeholder="Root"
-          className="px-4 py-2 bg-gray-800 rounded w-24"
-        />
-        <input
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          placeholder="Target"
-          className="px-4 py-2 bg-gray-800 rounded w-24"
-        />
-      </div>
-
-      <div className="flex justify-center gap-4 mb-6">
-        <button onClick={handlePlay} className="px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 font-semibold hover:scale-105 transition-all flex items-center gap-2">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-          </svg>
-          Play
-        </button>
-        <button onClick={handlePause} className="px-6 py-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 font-semibold hover:scale-105 transition-all flex items-center gap-2">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M5 4a2 2 0 012-2h2a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V4zM13 4a2 2 0 012-2h2a2 2 0 012 2v12a2 2 0 01-2 2h-2a2 2 0 01-2-2V4z" />
-          </svg>
-          Pause
-        </button>
-        <button onClick={handleReplay} className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 font-semibold hover:scale-105 transition-all flex items-center gap-2">
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-          </svg>
-          Replay
-        </button>
-      </div>
-
-      {error && (
-        <p className="text-center text-red-400 mb-4">{error}</p>
-      )}
-
+      <ControlButtons onPlay={handlePlay} onPause={handlePause} onReplay={handleReplay} disabled={isPlaying} />
+      <AlgoExplanation explanation={explanation} isPlaying={isPlaying} />
 
       <div className="algo-split-layout">
         <div className="algo-visualization-panel">
-      <div className="flex justify-center mb-6">
-        <svg width="520" height="440" className="bg-gray-800 rounded">
-          {nodeKeys.map((u) =>
-            adjList[u].map((v, i) => {
-              if (!positions[u] || !positions[v]) return null;
-
-              return (
-                <line
-                  key={`${u}-${v}-${i}`}
-                  x1={positions[u].x}
-                  y1={positions[u].y}
-                  x2={positions[v].x}
-                  y2={positions[v].y}
-                  stroke="#555"
-                />
-              );
-            })
-          )}
-
-          {nodeKeys.map((node) => {
-            let color = "#3b82f6";
-
-            if (visited.has(node)) color = "#22c55e";
-            if (node === currentNode) color = "#facc15";
-            if (found && node === target) color = "#ef4444";
-
-            return (
-              <g key={node}>
-                <circle
-                  cx={positions[node].x}
-                  cy={positions[node].y}
-                  r="18"
-                  fill={color}
-                />
-                <text
-                  x={positions[node].x}
-                  y={positions[node].y + 5}
-                  textAnchor="middle"
-                  fill="black"
-                  fontWeight="bold"
-                >
-                  {node}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-
-      <div className="max-w-4xl mx-auto bg-gray-800 p-6 rounded">
-        <p>
-          <strong>Current Node:</strong>{" "}
-          <span className="text-yellow-400">{currentNode || "-"}</span>
-        </p>
-        <p>
-          <strong>Queue:</strong>{" "}
-          {queue.length ? queue.join(" → ") : "Empty"}
-        </p>
-
-        {found && (
-          <p className="text-green-400 font-semibold mt-2">
-            🎯 Target node found!
-          </p>
-        )}
-      </div>
+          <AlgoVisualizationContainer>
+            <div className="flex justify-center mb-4">
+              <svg width="520" height="440" className="rounded-xl" style={{ background: 'hsl(220 20% 6%)' }}>
+                {nodeKeys.map((u) =>
+                  adjList[u].map((v, i) => positions[u] && positions[v] ? (
+                    <line key={`${u}-${v}-${i}`} x1={positions[u].x} y1={positions[u].y} x2={positions[v].x} y2={positions[v].y} stroke="hsl(220 14% 22%)" strokeWidth="1.5" />
+                  ) : null)
+                )}
+                {nodeKeys.map((node) => {
+                  let color = "hsl(220 60% 55%)";
+                  if (visited.has(node)) color = "hsl(145 65% 48%)";
+                  if (node === currentNode) color = "hsl(40 90% 55%)";
+                  if (found && node === target) color = "hsl(0 72% 58%)";
+                  return (
+                    <g key={node}>
+                      <circle cx={positions[node].x} cy={positions[node].y} r="22" fill={color} style={{ filter: node === currentNode ? 'drop-shadow(0 0 8px hsl(40 90% 55%))' : 'none' }} />
+                      <text x={positions[node].x} y={positions[node].y + 5} textAnchor="middle" fill="hsl(220 20% 6%)" fontWeight="bold" fontSize="14">{node}</text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+            <div className="card rounded-xl p-4 mt-4">
+              <p><strong style={{ color: 'hsl(220 10% 50%)' }}>Current Node:</strong> <span style={{ color: 'hsl(40 90% 55%)' }}>{currentNode || "-"}</span></p>
+              <p><strong style={{ color: 'hsl(220 10% 50%)' }}>Queue:</strong> <span style={{ color: 'hsl(168 80% 50%)' }}>{queue.length ? queue.join(" → ") : "Empty"}</span></p>
+              {found && <p className="font-semibold mt-2" style={{ color: 'hsl(145 65% 48%)' }}>🎯 Target node found!</p>}
+            </div>
+          </AlgoVisualizationContainer>
         </div>
         <div className="algo-code-panel">
           <CodeViewer code={BFS_CODE} highlightedLine={highlightedLine} title="bfs.js" />

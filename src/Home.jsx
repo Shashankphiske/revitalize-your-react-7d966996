@@ -1,205 +1,167 @@
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
+  }),
+};
 
 const Home = () => {
   const categories = [
-    {
-      to: "/sortingalgorithms",
-      icon: "🔢",
-      title: "Sorting Algorithms",
-      description: "Bubble, Selection, Insertion, Merge, Quick, and Heap Sort.",
-      gradient: "from-purple-500 to-pink-500",
-      delay: "0"
-    },
-    {
-      to: "/searchingalgorithms",
-      icon: "🔍",
-      title: "Searching Algorithms",
-      description: "Binary Search and Linear Search techniques.",
-      gradient: "from-blue-500 to-cyan-500",
-      delay: "100"
-    },
-    {
-      to: "/graphalgorithms",
-      icon: "🕸️",
-      title: "Graph Algorithms",
-      description: "BFS and DFS graph traversal methods.",
-      gradient: "from-green-500 to-teal-500",
-      delay: "200"
-    },
-    {
-      to: "/treealgorithms",
-      icon: "🌳",
-      title: "Tree Traversals",
-      description: "Inorder, Preorder, and Postorder tree traversals.",
-      gradient: "from-yellow-500 to-orange-500",
-      delay: "300"
-    },
-    {
-      to: "/stackalgorithms",
-      icon: "📚",
-      title: "Stack Operations",
-      description: "Push and Pop operations on LIFO data structure.",
-      gradient: "from-red-500 to-pink-500",
-      delay: "400"
-    },
-    {
-      to: "/queuealgorithms",
-      icon: "🎫",
-      title: "Queue Operations",
-      description: "Enqueue and Dequeue operations on FIFO data structure.",
-      gradient: "from-indigo-500 to-purple-500",
-      delay: "500"
-    },
-    {
-      to: "/linkedlistalgorithms",
-      icon: "🔗",
-      title: "Linked List Operations",
-      description: "Insertion, Deletion, and Reversal in linked lists.",
-      gradient: "from-cyan-500 to-blue-500",
-      delay: "600"
-    },
-    {
-      to: "/shortestpathalgorithms",
-      icon: "🗺️",
-      title: "Shortest Path Algorithms",
-      description: "Dijkstra's and A* pathfinding algorithms.",
-      gradient: "from-emerald-500 to-green-500",
-      delay: "700"
-    },
-    {
-      to: "/dynamicalgorithms",
-      icon: "🧩",
-      title: "Dynamic Programming",
-      description: "LCS, Knapsack, Fibonacci, Grid DP, and more.",
-      gradient: "from-fuchsia-500 to-purple-600",
-      delay: "800"
-    }
+    { to: "/sortingalgorithms", icon: "🔢", title: "Sorting", description: "Bubble, Selection, Insertion, Merge, Quick, Heap Sort" },
+    { to: "/searchingalgorithms", icon: "🔍", title: "Searching", description: "Binary Search and Linear Search techniques" },
+    { to: "/graphalgorithms", icon: "🕸️", title: "Graphs", description: "BFS and DFS graph traversal methods" },
+    { to: "/treealgorithms", icon: "🌳", title: "Trees", description: "Inorder, Preorder, and Postorder traversals" },
+    { to: "/stackalgorithms", icon: "📚", title: "Stacks", description: "Push and Pop on LIFO data structure" },
+    { to: "/queuealgorithms", icon: "🎫", title: "Queues", description: "Enqueue and Dequeue on FIFO structure" },
+    { to: "/linkedlistalgorithms", icon: "🔗", title: "Linked Lists", description: "Insertion, Deletion, and Reversal" },
+    { to: "/shortestpathalgorithms", icon: "🗺️", title: "Shortest Path", description: "Dijkstra's and A* algorithms" },
+    { to: "/dynamicalgorithms", icon: "🧩", title: "Dynamic Programming", description: "Fibonacci, Coin Change, and more" },
+  ];
 
+  const stats = [
+    { value: "25+", label: "Algorithms" },
+    { value: "9", label: "Categories" },
+    { value: "100%", label: "Interactive" },
   ];
 
   return (
-    <div className="min-h-screen text-white pt-24 pb-16 px-6">
-      {/* Hero Section */}
-      <div className="text-center max-w-4xl mx-auto mb-20">
-        <div className="inline-block mb-6 float-animation">
-          {/* <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center glow">
-            <span className="text-4xl">🚀</span>
-          </div> */}
-        </div>
-        
-        <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-          <span className="gradient-text">Algorithm Visualizer</span>
-        </h1>
-        
-        <p className="text-gray-300 text-xl md:text-2xl mb-8 leading-relaxed">
-          Learn Data Structures and Algorithms through 
-          <span className="gradient-text-secondary font-semibold"> interactive visual animations</span>
-        </p>
-        
-        <p className="text-gray-400 text-lg mb-10">
-          Play, pause, and understand every step of complex algorithms in real-time
-        </p>
+    <div className="min-h-screen pt-16">
+      {/* Hero */}
+      <section className="relative grid-pattern overflow-hidden">
+        {/* Gradient orbs */}
+        <div className="absolute top-20 left-1/4 w-72 h-72 rounded-full opacity-20 blur-3xl pointer-events-none" style={{ background: 'hsl(168 80% 50%)' }} />
+        <div className="absolute bottom-10 right-1/4 w-60 h-60 rounded-full opacity-15 blur-3xl pointer-events-none" style={{ background: 'hsl(262 80% 65%)' }} />
 
-        <div className="flex flex-wrap justify-center gap-4">
-          <Link 
-            to="/sortingalgorithms" 
-            className="px-8 py-4 rounded-full btn-primary text-white font-semibold text-lg hover:scale-105 transition-all"
-          >
-            Get Started →
-          </Link>
-          {/* <a 
-            href="https://github.com" 
-            className="px-8 py-4 rounded-full glass-card text-white font-semibold text-lg hover:scale-105 transition-all"
-          >
-            ⭐ Star on GitHub
-          </a> */}
-        </div>
-      </div>
-
-      {/* Stats Section */}
-      <div className="max-w-4xl mx-auto mb-20">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="glass-card rounded-2xl p-6 text-center">
-            <div className="text-4xl font-bold gradient-text mb-2">25+</div>
-            <div className="text-gray-400">Algorithms</div>
-          </div>
-          <div className="glass-card rounded-2xl p-6 text-center">
-            <div className="text-4xl font-bold gradient-text-secondary mb-2">8</div>
-            <div className="text-gray-400">Categories</div>
-          </div>
-          <div className="glass-card rounded-2xl p-6 text-center">
-            <div className="text-4xl font-bold gradient-text mb-2">100%</div>
-            <div className="text-gray-400">Interactive</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Algorithm Cards */}
-      <div className="max-w-7xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          Explore <span className="gradient-text">Algorithm Categories</span>
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {categories.map((category, index) => (
-            <Link
-              key={index}
-              to={category.to}
-              className="glass-card rounded-2xl p-6 group hover:scale-105 transition-all duration-300"
-              style={{ animationDelay: `${category.delay}ms` }}
+        <div className="relative max-w-5xl mx-auto px-6 py-28 md:py-40 text-center">
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
+            <span
+              className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase mb-6"
+              style={{
+                background: 'hsl(168 80% 50% / 0.1)',
+                color: 'hsl(168 80% 50%)',
+                border: '1px solid hsl(168 80% 50% / 0.25)',
+              }}
             >
-              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${category.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                <span className="text-3xl">{category.icon}</span>
-              </div>
-              
-              <h2 className="text-xl font-semibold mb-3 group-hover:gradient-text transition-all">
-                {category.title}
-              </h2>
-              
-              <p className="text-gray-400 text-sm mb-4 leading-relaxed">
-                {category.description}
-              </p>
-              
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 font-medium inline-flex items-center gap-2 group-hover:gap-3 transition-all">
-                Explore 
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </span>
+              Interactive Learning Platform
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial="hidden" animate="visible" variants={fadeUp} custom={1}
+            className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[0.9] mb-6"
+          >
+            <span style={{ color: 'hsl(0 0% 96%)' }}>Algorithm</span>
+            <br />
+            <span className="gradient-text">Visualizer</span>
+          </motion.h1>
+
+          <motion.p
+            initial="hidden" animate="visible" variants={fadeUp} custom={2}
+            className="text-lg md:text-xl max-w-2xl mx-auto mb-10"
+            style={{ color: 'hsl(220 10% 55%)' }}
+          >
+            Play, pause, and understand every step of complex algorithms through
+            beautiful interactive animations.
+          </motion.p>
+
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3} className="flex flex-wrap justify-center gap-4">
+            <Link to="/sortingalgorithms" className="btn-primary px-8 py-3.5 text-base">
+              Get Started →
             </Link>
+            <Link to="/graphalgorithms" className="btn-outline px-8 py-3.5 text-base">
+              Explore Graphs
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="max-w-4xl mx-auto px-6 -mt-8 relative z-10">
+        <div className="card rounded-2xl p-1 grid grid-cols-3 divide-x" style={{ borderColor: 'hsl(220 14% 18%)' }}>
+          {stats.map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial="hidden" whileInView="visible" viewport={{ once: true }}
+              variants={fadeUp} custom={i}
+              className="text-center py-6"
+              style={{ borderColor: 'hsl(220 14% 18%)' }}
+            >
+              <div className="text-3xl md:text-4xl font-black gradient-text">{stat.value}</div>
+              <div className="text-sm mt-1" style={{ color: 'hsl(220 10% 50%)' }}>{stat.label}</div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </section>
 
-      {/* Features Section */}
-      <div className="max-w-7xl mx-auto mt-24">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          Why <span className="gradient-text">AlgoVisualizer</span>?
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="glass-card rounded-2xl p-8 text-center">
-            <div className="text-5xl mb-4">⚡</div>
-            <h3 className="text-xl font-semibold mb-3">Lightning Fast</h3>
-            <p className="text-gray-400">Optimized performance for smooth real-time visualization</p>
-          </div>
-          
-          <div className="glass-card rounded-2xl p-8 text-center">
-            <div className="text-5xl mb-4">🎨</div>
-            <h3 className="text-xl font-semibold mb-3">Beautiful UI</h3>
-            <p className="text-gray-400">Modern glass morphism design with premium aesthetics</p>
-          </div>
-          
-          <div className="glass-card rounded-2xl p-8 text-center">
-            <div className="text-5xl mb-4">📚</div>
-            <h3 className="text-xl font-semibold mb-3">Educational</h3>
-            <p className="text-gray-400">Step-by-step explanations for better understanding</p>
-          </div>
+      {/* Categories */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center mb-14">
+          <h2 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: 'hsl(0 0% 96%)' }}>
+            Explore <span className="gradient-text">Categories</span>
+          </h2>
+          <p style={{ color: 'hsl(220 10% 50%)' }}>Choose a topic and start visualizing</p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {categories.map((cat, i) => (
+            <motion.div
+              key={cat.to}
+              initial="hidden" whileInView="visible" viewport={{ once: true }}
+              variants={fadeUp} custom={i}
+            >
+              <Link to={cat.to} className="card block p-6 group">
+                <div className="flex items-start gap-4">
+                  <span className="text-3xl flex-shrink-0">{cat.icon}</span>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold mb-1 group-hover:gradient-text transition-all" style={{ color: 'hsl(0 0% 96%)' }}>
+                      {cat.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed" style={{ color: 'hsl(220 10% 50%)' }}>
+                      {cat.description}
+                    </p>
+                  </div>
+                  <svg
+                    className="w-5 h-5 flex-shrink-0 mt-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all"
+                    style={{ color: 'hsl(168 80% 50%)' }}
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
         </div>
-      </div>
+      </section>
+
+      {/* Features */}
+      <section className="max-w-5xl mx-auto px-6 pb-24">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { icon: "⚡", title: "Real-time", desc: "Watch algorithms execute step-by-step" },
+            { icon: "🎮", title: "Interactive", desc: "Control speed, pause, and replay anytime" },
+            { icon: "📖", title: "Educational", desc: "Explanations with every operation" },
+          ].map((f, i) => (
+            <motion.div
+              key={f.title}
+              initial="hidden" whileInView="visible" viewport={{ once: true }}
+              variants={fadeUp} custom={i}
+              className="card p-6 text-center"
+            >
+              <span className="text-4xl block mb-3">{f.icon}</span>
+              <h3 className="font-semibold mb-1" style={{ color: 'hsl(0 0% 96%)' }}>{f.title}</h3>
+              <p className="text-sm" style={{ color: 'hsl(220 10% 50%)' }}>{f.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 };
 
 export default Home;
-

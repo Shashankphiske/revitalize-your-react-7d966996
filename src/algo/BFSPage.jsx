@@ -129,7 +129,7 @@ const BFSPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-32 pb-16 px-6" style={{ color: 'hsl(0 0% 96%)' }}>
+    <div className="min-h-screen pt-24 sm:pt-32 pb-16 px-3 sm:px-6" style={{ color: 'hsl(0 0% 96%)' }}>
       <AlgoPageHeader
         icon="🌊"
         title="Breadth-First Search"
@@ -138,17 +138,17 @@ const BFSPage = () => {
       />
 
       {/* Graph Input */}
-      <div className="max-w-5xl mx-auto mb-8">
-        <div className="card rounded-2xl p-6">
-          <h3 className="text-lg font-semibold mb-4 gradient-text-secondary">Graph Input (Adjacency List)</h3>
+      <div className="max-w-5xl mx-auto mb-6 sm:mb-8">
+        <div className="card rounded-2xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 gradient-text-secondary">Graph Input (Adjacency List)</h3>
           {nodes.map((item, idx) => (
-            <div key={idx} className="flex gap-3 mb-2 items-center">
+            <div key={idx} className="flex gap-2 sm:gap-3 mb-2 items-center flex-wrap sm:flex-nowrap">
               <input value={item.node} disabled={isPlaying}
                 onChange={(e) => { const copy = [...nodes]; copy[idx].node = e.target.value; setNodes(copy); }}
-                placeholder="Node" className="px-3 py-2 rounded-xl w-24 outline-none transition-all" style={inputStyle} />
+                placeholder="Node" className="px-3 py-2 rounded-xl w-16 sm:w-24 outline-none text-sm" style={inputStyle} />
               <input value={item.neighbors} disabled={isPlaying}
                 onChange={(e) => { const copy = [...nodes]; copy[idx].neighbors = e.target.value; setNodes(copy); }}
-                placeholder="Neighbors (comma separated)" className="px-3 py-2 rounded-xl flex-1 outline-none transition-all" style={inputStyle} />
+                placeholder="Neighbors" className="px-3 py-2 rounded-xl flex-1 min-w-0 outline-none text-sm" style={inputStyle} />
               <button disabled={isPlaying}
                 onClick={() => {
                   const nodeToDelete = nodes[idx].node;
@@ -156,22 +156,22 @@ const BFSPage = () => {
                   updated = updated.map((item) => ({ ...item, neighbors: item.neighbors.split(",").map((n) => n.trim()).filter((n) => n && n !== nodeToDelete).join(",") }));
                   setNodes(updated);
                 }}
-                className="px-3 py-2 rounded-xl font-semibold transition-all" style={{ background: 'hsl(0 72% 58%)', color: 'hsl(0 0% 96%)' }}>✕</button>
+                className="px-3 py-2 rounded-xl font-semibold transition-all text-sm flex-shrink-0" style={{ background: 'hsl(0 72% 58%)', color: 'hsl(0 0% 96%)' }}>✕</button>
             </div>
           ))}
           <button onClick={() => setNodes([...nodes, { node: "", neighbors: "" }])}
-            className="mt-3 px-4 py-2 rounded-xl font-semibold btn-primary">+ Add Node</button>
+            className="mt-3 px-4 py-2 rounded-xl font-semibold btn-primary text-sm">+ Add Node</button>
 
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3 mt-4 flex-wrap">
             <div>
               <label className="text-xs block mb-1" style={{ color: 'hsl(220 10% 50%)' }}>Root</label>
               <input value={root} onChange={(e) => setRoot(e.target.value)} placeholder="Root"
-                className="px-3 py-2 rounded-xl w-24 outline-none" style={inputStyle} />
+                className="px-3 py-2 rounded-xl w-20 sm:w-24 outline-none text-sm" style={inputStyle} />
             </div>
             <div>
               <label className="text-xs block mb-1" style={{ color: 'hsl(220 10% 50%)' }}>Target</label>
               <input value={target} onChange={(e) => setTarget(e.target.value)} placeholder="Target"
-                className="px-3 py-2 rounded-xl w-24 outline-none" style={inputStyle} />
+                className="px-3 py-2 rounded-xl w-20 sm:w-24 outline-none text-sm" style={inputStyle} />
             </div>
           </div>
           {error && <p className="text-sm mt-2" style={{ color: 'hsl(0 72% 58%)' }}>{error}</p>}
@@ -185,7 +185,7 @@ const BFSPage = () => {
         <div className="algo-visualization-panel">
           <AlgoVisualizationContainer>
             <div className="flex justify-center mb-4">
-              <svg width="520" height="440" className="rounded-xl" style={{ background: 'hsl(220 20% 6%)' }}>
+              <svg viewBox="0 0 520 440" className="responsive-svg rounded-xl" style={{ background: 'hsl(220 20% 6%)', maxHeight: '440px' }}>
                 {nodeKeys.map((u) =>
                   adjList[u].map((v, i) => positions[u] && positions[v] ? (
                     <line key={`${u}-${v}-${i}`} x1={positions[u].x} y1={positions[u].y} x2={positions[v].x} y2={positions[v].y} stroke="hsl(220 14% 22%)" strokeWidth="1.5" />
@@ -205,10 +205,10 @@ const BFSPage = () => {
                 })}
               </svg>
             </div>
-            <div className="card rounded-xl p-4 mt-4">
-              <p><strong style={{ color: 'hsl(220 10% 50%)' }}>Current Node:</strong> <span style={{ color: 'hsl(40 90% 55%)' }}>{currentNode || "-"}</span></p>
-              <p><strong style={{ color: 'hsl(220 10% 50%)' }}>Queue:</strong> <span style={{ color: 'hsl(168 80% 50%)' }}>{queue.length ? queue.join(" → ") : "Empty"}</span></p>
-              {found && <p className="font-semibold mt-2" style={{ color: 'hsl(145 65% 48%)' }}>🎯 Target node found!</p>}
+            <div className="card rounded-xl p-3 sm:p-4 mt-4">
+              <p className="text-sm"><strong style={{ color: 'hsl(220 10% 50%)' }}>Current Node:</strong> <span style={{ color: 'hsl(40 90% 55%)' }}>{currentNode || "-"}</span></p>
+              <p className="text-sm"><strong style={{ color: 'hsl(220 10% 50%)' }}>Queue:</strong> <span style={{ color: 'hsl(168 80% 50%)' }}>{queue.length ? queue.join(" → ") : "Empty"}</span></p>
+              {found && <p className="font-semibold mt-2 text-sm" style={{ color: 'hsl(145 65% 48%)' }}>🎯 Target node found!</p>}
             </div>
           </AlgoVisualizationContainer>
         </div>

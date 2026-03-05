@@ -191,6 +191,7 @@ body {
   align-items: flex-start;
   max-width: 1400px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .algo-visualization-panel {
@@ -210,6 +211,84 @@ body {
   .algo-code-panel {
     width: 100%;
   }
+}
+
+/* ─── Responsive SVG ──────────────────────────────────────────────────────── */
+.responsive-svg {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+}
+
+/* ─── Responsive Algo Pages ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .algo-split-layout {
+    padding: 0;
+  }
+  .algo-bar {
+    min-width: 28px !important;
+    width: auto !important;
+    flex: 1;
+    max-width: 48px;
+  }
+  .algo-bar-container {
+    min-height: 250px !important;
+    height: auto !important;
+  }
+  .algo-node {
+    width: 3rem !important;
+    height: 2.5rem !important;
+    font-size: 0.875rem !important;
+  }
+  .algo-cell {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    font-size: 0.875rem !important;
+  }
+  .algo-dp-cell {
+    width: 3rem !important;
+    height: 3rem !important;
+  }
+  .algo-dp-cell .text-xs {
+    font-size: 0.6rem !important;
+  }
+  .algo-dp-cell .text-xl {
+    font-size: 0.875rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .algo-bar {
+    min-width: 20px !important;
+    max-width: 36px;
+  }
+  .algo-bar-container {
+    min-height: 200px !important;
+  }
+  .algo-node {
+    width: 2.5rem !important;
+    height: 2rem !important;
+    font-size: 0.75rem !important;
+  }
+  .algo-cell {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+/* ─── Category Page Card ──────────────────────────────────────────────────── */
+.category-card {
+  background: hsl(var(--bg-card));
+  border: 1px solid hsl(var(--border-subtle));
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.category-card:hover {
+  background: hsl(var(--bg-card-hover));
+  border-color: hsl(var(--accent) / 0.3);
+  box-shadow: 0 0 30px hsl(var(--accent) / 0.08);
+  transform: translateY(-2px) scale(1.02);
 }
 
 /* ─── Code Viewer ─────────────────────────────────────────────────────────── */

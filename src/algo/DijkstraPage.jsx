@@ -48,22 +48,22 @@ const DijkstraPage = () => {
   const inputStyle = { background: 'hsl(220 20% 6%)', border: '1px solid hsl(220 14% 22%)', color: 'hsl(0 0% 96%)' };
 
   return (
-    <div className="min-h-screen pt-32 pb-16 px-6" style={{ color: 'hsl(0 0% 96%)' }}>
+    <div className="min-h-screen pt-24 sm:pt-32 pb-16 px-3 sm:px-6" style={{ color: 'hsl(0 0% 96%)' }}>
       <AlgoPageHeader icon="🛤️" title="Dijkstra's Algorithm" description="Finds the shortest path from a source node to all other nodes in a weighted graph with non-negative edges." complexity={{ time: "O((V+E) log V)", space: "O(V)" }} />
-      <div className="max-w-5xl mx-auto mb-8">
-        <div className="card rounded-2xl p-6">
-          <h3 className="text-lg font-semibold mb-4 gradient-text-secondary">Weighted Graph Input</h3>
+      <div className="max-w-5xl mx-auto mb-6 sm:mb-8">
+        <div className="card rounded-2xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 gradient-text-secondary">Weighted Graph Input</h3>
           {nodes.map((item, idx) => (
-            <div key={idx} className="flex gap-3 mb-2 items-center">
-              <input value={item.node} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].node = e.target.value; setNodes(c); }} placeholder="Node" className="px-3 py-2 rounded-xl w-20 outline-none" style={inputStyle} />
-              <input value={item.neighbors} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].neighbors = e.target.value; setNodes(c); }} placeholder="B:4,C:2" className="px-3 py-2 rounded-xl flex-1 outline-none" style={inputStyle} />
-              <button disabled={isPlaying} onClick={() => { const d = nodes[idx].node; let u = nodes.filter((_, i) => i !== idx); u = u.map((it) => ({ ...it, neighbors: it.neighbors.split(",").map((x) => x.trim()).filter((x) => x && !x.startsWith(d + ":")).join(",") })); setNodes(u); }} className="px-3 py-2 rounded-xl" style={{ background: 'hsl(0 72% 58%)', color: 'hsl(0 0% 96%)' }}>✕</button>
+            <div key={idx} className="flex gap-2 sm:gap-3 mb-2 items-center flex-wrap sm:flex-nowrap">
+              <input value={item.node} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].node = e.target.value; setNodes(c); }} placeholder="Node" className="px-3 py-2 rounded-xl w-16 sm:w-20 outline-none text-sm" style={inputStyle} />
+              <input value={item.neighbors} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].neighbors = e.target.value; setNodes(c); }} placeholder="B:4,C:2" className="px-3 py-2 rounded-xl flex-1 min-w-0 outline-none text-sm" style={inputStyle} />
+              <button disabled={isPlaying} onClick={() => { const d = nodes[idx].node; let u = nodes.filter((_, i) => i !== idx); u = u.map((it) => ({ ...it, neighbors: it.neighbors.split(",").map((x) => x.trim()).filter((x) => x && !x.startsWith(d + ":")).join(",") })); setNodes(u); }} className="px-3 py-2 rounded-xl text-sm flex-shrink-0" style={{ background: 'hsl(0 72% 58%)', color: 'hsl(0 0% 96%)' }}>✕</button>
             </div>
           ))}
-          <button onClick={() => setNodes([...nodes, { node: "", neighbors: "" }])} className="mt-3 px-4 py-2 rounded-xl btn-primary">+ Add Node</button>
-          <div className="flex gap-3 mt-4">
-            <div><label className="text-xs block mb-1" style={{ color: 'hsl(220 10% 50%)' }}>Start</label><input value={start} onChange={(e) => setStart(e.target.value)} className="px-3 py-2 rounded-xl w-24 outline-none" style={inputStyle} /></div>
-            <div><label className="text-xs block mb-1" style={{ color: 'hsl(220 10% 50%)' }}>End</label><input value={end} onChange={(e) => setEnd(e.target.value)} className="px-3 py-2 rounded-xl w-24 outline-none" style={inputStyle} /></div>
+          <button onClick={() => setNodes([...nodes, { node: "", neighbors: "" }])} className="mt-3 px-4 py-2 rounded-xl btn-primary text-sm">+ Add Node</button>
+          <div className="flex gap-3 mt-4 flex-wrap">
+            <div><label className="text-xs block mb-1" style={{ color: 'hsl(220 10% 50%)' }}>Start</label><input value={start} onChange={(e) => setStart(e.target.value)} className="px-3 py-2 rounded-xl w-20 sm:w-24 outline-none text-sm" style={inputStyle} /></div>
+            <div><label className="text-xs block mb-1" style={{ color: 'hsl(220 10% 50%)' }}>End</label><input value={end} onChange={(e) => setEnd(e.target.value)} className="px-3 py-2 rounded-xl w-20 sm:w-24 outline-none text-sm" style={inputStyle} /></div>
           </div>
           {error && <p className="text-sm mt-2" style={{ color: 'hsl(0 72% 58%)' }}>{error}</p>}
         </div>
@@ -72,7 +72,7 @@ const DijkstraPage = () => {
       <AlgoExplanation explanation={explanation} isPlaying={isPlaying} />
       <AlgoVisualizationContainer>
         <div className="flex justify-center mb-4">
-          <svg width="560" height="480" className="rounded-xl" style={{ background: 'hsl(220 20% 6%)' }}>
+          <svg viewBox="0 0 560 480" className="responsive-svg rounded-xl" style={{ background: 'hsl(220 20% 6%)', maxHeight: '480px' }}>
             {nodeKeys.map((u) => Object.entries(adjList[u]).map(([v, w], i) => positions[u] && positions[v] ? (<g key={`${u}-${v}-${i}`}><line x1={positions[u].x} y1={positions[u].y} x2={positions[v].x} y2={positions[v].y} stroke="hsl(220 14% 22%)" strokeWidth="1.5" /><text x={(positions[u].x + positions[v].x) / 2} y={(positions[u].y + positions[v].y) / 2} fill="hsl(220 10% 60%)" fontSize="12">{w}</text></g>) : null))}
             {nodeKeys.map((node) => {
               let color = "hsl(220 60% 55%)";
@@ -84,11 +84,11 @@ const DijkstraPage = () => {
           </svg>
         </div>
         {step.distances && (
-          <div className="grid grid-cols-4 gap-3 mt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-4">
             {Object.entries(step.distances).map(([node, d]) => (
-              <div key={node} className="card rounded-xl p-3 text-center">
-                <div className="font-bold" style={{ color: 'hsl(168 80% 50%)' }}>{node}</div>
-                <div style={{ color: 'hsl(0 0% 96%)' }}>{d === Infinity ? "∞" : d}</div>
+              <div key={node} className="card rounded-xl p-2 sm:p-3 text-center">
+                <div className="font-bold text-sm" style={{ color: 'hsl(168 80% 50%)' }}>{node}</div>
+                <div className="text-sm" style={{ color: 'hsl(0 0% 96%)' }}>{d === Infinity ? "∞" : d}</div>
               </div>
             ))}
           </div>

@@ -51,20 +51,20 @@ const TreeTraversalPage = ({ title, icon, description, fetchEndpoint, traversalO
   const inputStyle = { background: 'hsl(220 20% 6%)', border: '1px solid hsl(220 14% 22%)', color: 'hsl(0 0% 96%)' };
 
   return (
-    <div className="min-h-screen pt-32 pb-16 px-6" style={{ color: 'hsl(0 0% 96%)' }}>
+    <div className="min-h-screen pt-24 sm:pt-32 pb-16 px-3 sm:px-6" style={{ color: 'hsl(0 0% 96%)' }}>
       <AlgoPageHeader icon={icon} title={title} description={description} complexity={{ time: "O(n)", space: "O(h)" }} />
-      <div className="max-w-5xl mx-auto mb-8">
-        <div className="card rounded-2xl p-6">
-          <h3 className="text-lg font-semibold mb-4 gradient-text-secondary">Tree Input</h3>
+      <div className="max-w-5xl mx-auto mb-6 sm:mb-8">
+        <div className="card rounded-2xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 gradient-text-secondary">Tree Input</h3>
           {nodes.map((n, idx) => (
-            <div key={idx} className="flex gap-3 mb-2 items-center">
-              <input value={n.node} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].node = e.target.value; setNodes(c); }} placeholder="Node" className="px-3 py-2 rounded-xl w-20 outline-none" style={inputStyle} />
-              <input value={n.left} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].left = e.target.value; setNodes(c); }} placeholder="Left" className="px-3 py-2 rounded-xl w-20 outline-none" style={inputStyle} />
-              <input value={n.right} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].right = e.target.value; setNodes(c); }} placeholder="Right" className="px-3 py-2 rounded-xl w-20 outline-none" style={inputStyle} />
-              <button disabled={isPlaying} onClick={() => { const del = nodes[idx].node; let upd = nodes.filter((_, i) => i !== idx); upd = upd.map((x) => ({ ...x, left: x.left === del ? "" : x.left, right: x.right === del ? "" : x.right })); setNodes(upd); }} className="px-3 py-2 rounded-xl font-semibold" style={{ background: 'hsl(0 72% 58%)', color: 'hsl(0 0% 96%)' }}>✕</button>
+            <div key={idx} className="flex gap-2 sm:gap-3 mb-2 items-center flex-wrap sm:flex-nowrap">
+              <input value={n.node} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].node = e.target.value; setNodes(c); }} placeholder="Node" className="px-3 py-2 rounded-xl w-16 sm:w-20 outline-none text-sm" style={inputStyle} />
+              <input value={n.left} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].left = e.target.value; setNodes(c); }} placeholder="Left" className="px-3 py-2 rounded-xl w-16 sm:w-20 outline-none text-sm" style={inputStyle} />
+              <input value={n.right} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].right = e.target.value; setNodes(c); }} placeholder="Right" className="px-3 py-2 rounded-xl w-16 sm:w-20 outline-none text-sm" style={inputStyle} />
+              <button disabled={isPlaying} onClick={() => { const del = nodes[idx].node; let upd = nodes.filter((_, i) => i !== idx); upd = upd.map((x) => ({ ...x, left: x.left === del ? "" : x.left, right: x.right === del ? "" : x.right })); setNodes(upd); }} className="px-3 py-2 rounded-xl font-semibold text-sm flex-shrink-0" style={{ background: 'hsl(0 72% 58%)', color: 'hsl(0 0% 96%)' }}>✕</button>
             </div>
           ))}
-          <button onClick={() => setNodes([...nodes, { node: "", left: "", right: "" }])} className="mt-3 px-4 py-2 rounded-xl font-semibold btn-primary">+ Add Node</button>
+          <button onClick={() => setNodes([...nodes, { node: "", left: "", right: "" }])} className="mt-3 px-4 py-2 rounded-xl font-semibold btn-primary text-sm">+ Add Node</button>
           {error && <p className="text-sm mt-3" style={{ color: 'hsl(0 72% 58%)' }}>{error}</p>}
         </div>
       </div>
@@ -73,8 +73,8 @@ const TreeTraversalPage = ({ title, icon, description, fetchEndpoint, traversalO
       <div className="algo-split-layout">
         <div className="algo-visualization-panel">
           <AlgoVisualizationContainer>
-            <div className="flex justify-center">
-              <svg width="800" height="400" className="rounded-xl" style={{ background: 'hsl(220 20% 6%)' }}>
+            <div className="flex justify-center overflow-x-auto">
+              <svg viewBox="0 0 800 400" className="responsive-svg rounded-xl" style={{ background: 'hsl(220 20% 6%)', maxHeight: '400px' }}>
                 {edges.map(([u, v], i) => (<line key={i} x1={positions[u].x} y1={positions[u].y} x2={positions[v].x} y2={positions[v].y} stroke="hsl(220 14% 22%)" strokeWidth="1.5" />))}
                 {Object.entries(positions).map(([node, pos]) => {
                   let color = "hsl(220 60% 55%)";

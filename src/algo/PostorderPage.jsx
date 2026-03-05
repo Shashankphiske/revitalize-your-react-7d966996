@@ -32,20 +32,20 @@ const PostorderPage = () => {
   const inputStyle = { background: 'hsl(220 20% 6%)', border: '1px solid hsl(220 14% 22%)', color: 'hsl(0 0% 96%)' };
 
   return (
-    <div className="min-h-screen pt-32 pb-16 px-6" style={{ color: 'hsl(0 0% 96%)' }}>
+    <div className="min-h-screen pt-24 sm:pt-32 pb-16 px-3 sm:px-6" style={{ color: 'hsl(0 0% 96%)' }}>
       <AlgoPageHeader icon="🍂" title="Postorder Traversal" description="Postorder visits nodes in Left → Right → Root order. Useful for deleting trees or evaluating expression trees." complexity={{ time: "O(n)", space: "O(h)" }} />
-      <div className="max-w-5xl mx-auto mb-8">
-        <div className="card rounded-2xl p-6">
-          <h3 className="text-lg font-semibold mb-4 gradient-text-secondary">Tree Input</h3>
+      <div className="max-w-5xl mx-auto mb-6 sm:mb-8">
+        <div className="card rounded-2xl p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 gradient-text-secondary">Tree Input</h3>
           {nodes.map((n, idx) => (
-            <div key={idx} className="flex gap-3 mb-2 items-center">
-              <input value={n.node} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].node = e.target.value; setNodes(c); }} placeholder="Node" className="px-3 py-2 rounded-xl w-20 outline-none" style={inputStyle} />
-              <input value={n.left} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].left = e.target.value; setNodes(c); }} placeholder="Left" className="px-3 py-2 rounded-xl w-20 outline-none" style={inputStyle} />
-              <input value={n.right} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].right = e.target.value; setNodes(c); }} placeholder="Right" className="px-3 py-2 rounded-xl w-20 outline-none" style={inputStyle} />
-              <button disabled={isPlaying} onClick={() => { const d = nodes[idx].node; let u = nodes.filter((_, i) => i !== idx); u = u.map((x) => ({ ...x, left: x.left === d ? "" : x.left, right: x.right === d ? "" : x.right })); setNodes(u); }} className="px-3 py-2 rounded-xl" style={{ background: 'hsl(0 72% 58%)', color: 'hsl(0 0% 96%)' }}>✕</button>
+            <div key={idx} className="flex gap-2 sm:gap-3 mb-2 items-center flex-wrap sm:flex-nowrap">
+              <input value={n.node} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].node = e.target.value; setNodes(c); }} placeholder="Node" className="px-3 py-2 rounded-xl w-16 sm:w-20 outline-none text-sm" style={inputStyle} />
+              <input value={n.left} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].left = e.target.value; setNodes(c); }} placeholder="Left" className="px-3 py-2 rounded-xl w-16 sm:w-20 outline-none text-sm" style={inputStyle} />
+              <input value={n.right} disabled={isPlaying} onChange={(e) => { const c = [...nodes]; c[idx].right = e.target.value; setNodes(c); }} placeholder="Right" className="px-3 py-2 rounded-xl w-16 sm:w-20 outline-none text-sm" style={inputStyle} />
+              <button disabled={isPlaying} onClick={() => { const d = nodes[idx].node; let u = nodes.filter((_, i) => i !== idx); u = u.map((x) => ({ ...x, left: x.left === d ? "" : x.left, right: x.right === d ? "" : x.right })); setNodes(u); }} className="px-3 py-2 rounded-xl text-sm flex-shrink-0" style={{ background: 'hsl(0 72% 58%)', color: 'hsl(0 0% 96%)' }}>✕</button>
             </div>
           ))}
-          <button onClick={() => setNodes([...nodes, { node: "", left: "", right: "" }])} className="mt-3 px-4 py-2 rounded-xl btn-primary">+ Add Node</button>
+          <button onClick={() => setNodes([...nodes, { node: "", left: "", right: "" }])} className="mt-3 px-4 py-2 rounded-xl btn-primary text-sm">+ Add Node</button>
           {error && <p className="text-sm mt-3" style={{ color: 'hsl(0 72% 58%)' }}>{error}</p>}
         </div>
       </div>
@@ -54,10 +54,12 @@ const PostorderPage = () => {
       <div className="algo-split-layout">
         <div className="algo-visualization-panel">
           <AlgoVisualizationContainer>
-            <div className="flex justify-center"><svg width="800" height="400" className="rounded-xl" style={{ background: 'hsl(220 20% 6%)' }}>
-              {edges.map(([u, v], i) => (<line key={i} x1={positions[u].x} y1={positions[u].y} x2={positions[v].x} y2={positions[v].y} stroke="hsl(220 14% 22%)" strokeWidth="1.5" />))}
-              {Object.entries(positions).map(([node, pos]) => { let c = "hsl(220 60% 55%)"; if (visitedSet.has(node)) c = "hsl(145 65% 48%)"; if (node === currentNode) c = "hsl(40 90% 55%)"; return (<g key={node}><circle cx={pos.x} cy={pos.y} r="22" fill={c} style={{ filter: node === currentNode ? 'drop-shadow(0 0 8px hsl(40 90% 55%))' : 'none' }} /><text x={pos.x} y={pos.y + 5} textAnchor="middle" fill="hsl(220 20% 6%)" fontWeight="bold" fontSize="14">{node}</text></g>); })}
-            </svg></div>
+            <div className="flex justify-center overflow-x-auto">
+              <svg viewBox="0 0 800 400" className="responsive-svg rounded-xl" style={{ background: 'hsl(220 20% 6%)', maxHeight: '400px' }}>
+                {edges.map(([u, v], i) => (<line key={i} x1={positions[u].x} y1={positions[u].y} x2={positions[v].x} y2={positions[v].y} stroke="hsl(220 14% 22%)" strokeWidth="1.5" />))}
+                {Object.entries(positions).map(([node, pos]) => { let c = "hsl(220 60% 55%)"; if (visitedSet.has(node)) c = "hsl(145 65% 48%)"; if (node === currentNode) c = "hsl(40 90% 55%)"; return (<g key={node}><circle cx={pos.x} cy={pos.y} r="22" fill={c} style={{ filter: node === currentNode ? 'drop-shadow(0 0 8px hsl(40 90% 55%))' : 'none' }} /><text x={pos.x} y={pos.y + 5} textAnchor="middle" fill="hsl(220 20% 6%)" fontWeight="bold" fontSize="14">{node}</text></g>); })}
+              </svg>
+            </div>
           </AlgoVisualizationContainer>
         </div>
         <div className="algo-code-panel"><CodeViewer code={CODE} highlightedLine={null} title="postorder.js" /></div>

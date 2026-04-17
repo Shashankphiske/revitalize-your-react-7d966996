@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import LeetCodeQuestionsPanel from "../components/LeetCodeQuestionsPanel";
 
 const QueueAlgo = () => {
   const algorithms = [
@@ -37,6 +38,8 @@ const QueueAlgo = () => {
           </Link>
         ))}
       </div>
+
+      <LeetCodeQuestionsPanel topic="queue" title="Queue · LeetCode Practice" />
     </div>
   );
 };

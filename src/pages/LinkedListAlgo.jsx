@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import LeetCodeQuestionsPanel from "../components/LeetCodeQuestionsPanel";
 
 const LinkedListAlgo = () => {
   const algorithms = [
@@ -46,6 +47,8 @@ const LinkedListAlgo = () => {
           </Link>
         ))}
       </div>
+
+      <LeetCodeQuestionsPanel topic="linkedlist" title="Linked List · LeetCode Practice" />
     </div>
   );
 };

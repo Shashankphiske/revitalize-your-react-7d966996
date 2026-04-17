@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import LeetCodeQuestionsPanel from "../components/LeetCodeQuestionsPanel";
 
 const DynamicAlgorithms = () => {
   const algorithms = [
@@ -38,6 +39,8 @@ const DynamicAlgorithms = () => {
           </Link>
         ))}
       </div>
+
+      <LeetCodeQuestionsPanel topic="dp" title="Dynamic Programming · LeetCode Practice" />
     </div>
   );
 };

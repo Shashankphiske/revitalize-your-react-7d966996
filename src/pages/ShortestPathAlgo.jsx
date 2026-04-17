@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import LeetCodeQuestionsPanel from "../components/LeetCodeQuestionsPanel";
 
 const ShortestPathAlgo = () => {
   const algorithms = [
@@ -37,6 +38,8 @@ const ShortestPathAlgo = () => {
           </Link>
         ))}
       </div>
+
+      <LeetCodeQuestionsPanel topic="shortestpath" title="Shortest Path · LeetCode Practice" />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import LeetCodeQuestionsPanel from "../components/LeetCodeQuestionsPanel";
 
 const GraphAlgo = () => {
   const algorithms = [
@@ -38,6 +39,8 @@ const GraphAlgo = () => {
           </Link>
         ))}
       </div>
+
+      <LeetCodeQuestionsPanel topic="graph" title="Graph · LeetCode Practice" />
     </div>
   );
 };

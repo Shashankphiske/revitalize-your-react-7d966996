@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import { Hash, Dices } from "lucide-react";
 import CodeViewer from "../CodeViewer";
-import ControlButtons from "../ControlButtons";
 import {
   AlgoPageHeader,
-  AlgoExplanation,
-  AlgoVisualizationContainer,
+  AlgoPageShell,
 } from "../AlgoPageTemplate";
+import ControlBar from "../components/ControlBar";
+import ExplanationBox from "../components/ExplanationBox";
+import Legend from "../components/Legend";
+import useAlgoPlayer from "../hooks/useAlgoPlayer";
 
-const BUBBLE_SORT_CODE = [
+const CODE = [
   "function bubbleSort(arr) {",
   "  for (let i = 0; i < arr.length - 1; i++) {",
   "    for (let j = 0; j < arr.length - i - 1; j++) {",
@@ -28,233 +31,128 @@ const getHighlightedLine = (step) => {
   return step.swapped ? 4 : 3;
 };
 
+const explain = (step, baseArr) => {
+  if (!step) return "";
+  const arr = step.arr || baseArr;
+  if (!step.comparing || step.comparing.length === 0) return "Bubble Sort completed.";
+  const [i, j] = step.comparing;
+  return step.swapped
+    ? `Swapped ${arr[j]} and ${arr[i]}`
+    : `Comparing ${arr[i]} and ${arr[j]} — no swap`;
+};
+
+const fetchSteps = async (arr) => {
+  const res = await fetch("http://localhost:3000/sortingalgo/bubblesort", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ arr: JSON.stringify(arr) }),
+  });
+  return (await res.json()).arr;
+};
+
 const BubbleSortPage = () => {
-  const [input, setInput] = useState("5,3,8,4,2");
-  const [array, setArray] = useState([]);
-  const [steps, setSteps] = useState([]);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [explanation, setExplanation] = useState("");
-  const [error, setError] = useState("");
-  const [highlightedLine, setHighlightedLine] = useState(null);
-
-  const timerRef = useRef(null);
-  const highlightTimerRef = useRef(null);
-
-  const fetchSteps = async (arr) => {
-    const res = await fetch(
-      "http://localhost:3000/sortingalgo/bubblesort",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ arr: JSON.stringify(arr) }),
-      }
-    );
-    return (await res.json()).arr;
-  };
+  const [input, setInput] = useState("5,3,8,4,2,7,1,6");
+  const player = useAlgoPlayer();
+  const { step, isPlaying, error, setError } = player;
 
   const handlePlay = async () => {
-    if (isPlaying) return;
-
-    if (steps.length === 0) {
-      const parsed = input
-        .split(",")
-        .map((n) => Number(n.trim()))
-        .filter((n) => !isNaN(n));
-
-      if (parsed.length === 0) {
-        setError("Invalid input!");
-        return;
-      }
-
-      setError("");
-      setArray(parsed);
-      setCurrentStepIndex(0);
-      setExplanation("Starting Bubble Sort...");
-
-      const resSteps = await fetchSteps(parsed);
-      setSteps(resSteps);
+    if (player.steps.length === 0) {
+      const parsed = input.split(",").map((n) => Number(n.trim())).filter((n) => !isNaN(n));
+      if (parsed.length === 0) { setError("Please enter at least one number."); return; }
+      const data = await player.load(() => fetchSteps(parsed));
+      if (!data) return;
     }
-
-    setIsPlaying(true);
+    player.play();
   };
 
-  const handlePause = () => {
-    setIsPlaying(false);
-    clearTimeout(timerRef.current);
+  const randomize = () => {
+    const n = 6 + Math.floor(Math.random() * 4);
+    const arr = Array.from({ length: n }, () => 1 + Math.floor(Math.random() * 99));
+    setInput(arr.join(","));
+    player.reset();
   };
 
-  const handleReplay = () => {
-    clearTimeout(timerRef.current);
-    clearTimeout(highlightTimerRef.current);
-    setIsPlaying(false);
-    setSteps([]);
-    setArray([]);
-    setCurrentStepIndex(0);
-    setExplanation("");
-    setError("");
-    setHighlightedLine(null);
-  };
-
-  const generateExplanation = (step) => {
-    if (!step.comparing || step.comparing.length === 0)
-      return "Bubble Sort completed.";
-
-    const [i, j] = step.comparing;
-    const a = step.arr;
-
-    return step.swapped
-      ? `Swapped ${a[j]} and ${a[i]}`
-      : `Comparing ${a[i]} and ${a[j]} — no swap`;
-  };
-
-  useEffect(() => {
-    if (!isPlaying || currentStepIndex >= steps.length) {
-      if (isPlaying && currentStepIndex >= steps.length && steps.length > 0) {
-        setExplanation("Bubble Sort completed.");
-        setIsPlaying(false);
-      }
-      return;
-    }
-
-    // Early highlighting phase (200ms)
-    highlightTimerRef.current = setTimeout(() => {
-      const step = steps[currentStepIndex];
-      setHighlightedLine(getHighlightedLine(step));
-    }, 200);
-
-    // Full state update phase (1800ms)
-    timerRef.current = setTimeout(() => {
-      const step = steps[currentStepIndex];
-
-      setArray(step.arr);
-      setExplanation(generateExplanation(step));
-
-      setCurrentStepIndex((prev) => prev + 1);
-    }, 1800);
-
-    return () => {
-      clearTimeout(highlightTimerRef.current);
-      clearTimeout(timerRef.current);
-    };
-  }, [isPlaying, currentStepIndex, steps]);
-
-  const currentStep = steps[currentStepIndex - 1] || {};
-  const { comparing = [], swapped = false } = currentStep;
-
-  const inputStyle = {
-    background: "hsl(220 20% 6%)",
-    border: "1px solid hsl(220 14% 22%)",
-    color: "hsl(0 0% 96%)",
-  };
+  // derive view
+  const viewArr = step?.arr ?? input.split(",").map(Number).filter((n) => !isNaN(n));
+  const comparing = step?.comparing || [];
+  const sorted = step?.sorted || [];
+  const swapped = step?.swapped;
+  const max = Math.max(1, ...viewArr);
 
   return (
-    <div className="min-h-screen pt-24 sm:pt-32 pb-16 px-4 sm:px-6 text-white">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <AlgoPageShell>
+      <AlgoPageHeader
+        icon={Hash}
+        title="Bubble Sort"
+        description="Repeatedly compares adjacent elements and swaps them if they're in the wrong order, bubbling the largest unsorted value to the end on each pass."
+        complexity={{ time: "O(n²)", space: "O(1)", stable: "Stable" }}
+        badge={<><span>Sorting Algorithm</span></>}
+      />
 
-        {/* HEADER */}
-        <AlgoPageHeader
-          icon="🫧"
-          title="Bubble Sort"
-          description="Bubble Sort repeatedly swaps adjacent elements to sort the array."
-          complexity={{ time: "O(n²)", space: "O(1)", stable: "Stable" }}
-        />
-
-        {/* INPUT */}
-        <div className="card p-5 sm:p-6 space-y-3">
-          <h3 className="text-lg font-semibold">Input</h3>
-
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={isPlaying}
-            placeholder="e.g. 5,3,8,4,2"
-            className="w-full px-4 py-3 rounded-xl"
-            style={inputStyle}
-          />
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-
-          <p className="text-xs text-gray-400">
-            Try: 5,3,8,4,2 or 64,34,25,12,22,11,90
-          </p>
-        </div>
-
-        {/* CONTROLS + EXPLANATION */}
-        <div className="card p-5 space-y-4">
-          <ControlButtons
-            onPlay={handlePlay}
-            onPause={handlePause}
-            onReplay={handleReplay}
-            disabled={isPlaying}
-          />
-          <AlgoExplanation explanation={explanation} isPlaying={isPlaying} />
-        </div>
-
-        {/* MAIN SPLIT */}
-        <div className="grid lg:grid-cols-2 gap-6">
-
-          {/* VISUALIZER */}
-          <div className="card p-4 flex flex-col">
-            <AlgoVisualizationContainer>
-              <div className="flex justify-center items-end gap-2 min-h-[320px]">
-
-                {array.map((value, index) => {
-                  let bg = "linear-gradient(to top, #3b82f6, #38bdf8)";
-                  let scale = "scale(1)";
-                  let shadow = "none";
-
-                  if (comparing.includes(index)) {
-                    if (swapped) {
-                      bg = "linear-gradient(to top, #ef4444, #f87171)";
-                      shadow = "0 0 20px rgba(239,68,68,0.5)";
-                    } else {
-                      bg = "linear-gradient(to top, #f59e0b, #fbbf24)";
-                      shadow = "0 0 20px rgba(245,158,11,0.5)";
-                    }
-                    scale = "scale(1.1)";
-                  }
-
-                  const h = (value / Math.max(...array)) * 100;
-
-                  return (
-                    <div
-                      key={index}
-                      className="flex flex-col items-center justify-end transition-all duration-500"
-                      style={{ height: "280px", width: "3rem", transform: scale }}
-                    >
-                      <div className="text-xs font-bold mb-1 px-2 py-1 rounded-lg bg-gray-800">
-                        {value}
-                      </div>
-
-                      <div
-                        className="w-full rounded-t-xl transition-all duration-500"
-                        style={{
-                          height: `${h}%`,
-                          background: bg,
-                          boxShadow: shadow,
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-
-              </div>
-            </AlgoVisualizationContainer>
-          </div>
-
-          {/* CODE */}
-          <div className="card p-4 flex flex-col">
-            <CodeViewer
-              code={BUBBLE_SORT_CODE}
-              highlightedLine={highlightedLine}
-              title="bubble-sort.js"
+      {/* INPUT */}
+      <section className="card p-5 space-y-4">
+        <div className="card-title">Input</div>
+        <div className="flex flex-col sm:flex-row gap-3 items-end">
+          <div className="flex-1 w-full">
+            <label className="field-label">Array (comma-separated)</label>
+            <input
+              className="input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={isPlaying}
+              placeholder="e.g. 5,3,8,4,2"
             />
           </div>
-
+          <button className="btn" onClick={randomize} disabled={isPlaying}>
+            <Dices size={15} /> Random
+          </button>
         </div>
-      </div>
-    </div>
+        {error && <p className="text-xs text-[hsl(var(--accent-4))] font-mono">{error}</p>}
+      </section>
+
+      {/* CONTROLS */}
+      <section className="card p-5 space-y-4">
+        <ControlBar player={player} onPlay={handlePlay} />
+        <ExplanationBox text={explain(step, viewArr)} isPlaying={isPlaying} />
+      </section>
+
+      {/* SPLIT: VIZ + CODE */}
+      <section className="grid lg:grid-cols-2 gap-5">
+        <div className="card p-5">
+          <div className="card-title mb-4">Visualization</div>
+          <div className="flex items-end justify-center gap-2 h-[280px]">
+            {viewArr.map((value, i) => {
+              let cls = "bar bar-default";
+              if (sorted.includes(i)) cls = "bar bar-sorted";
+              else if (comparing.includes(i)) cls = swapped ? "bar bar-swap" : "bar bar-compare";
+              const h = (value / max) * 100;
+              return (
+                <div key={i} className="bar-wrap" style={{ height: "260px" }}>
+                  <span className="bar-label">{value}</span>
+                  <div className={cls} style={{ height: `${h}%`, width: 40 }} />
+                </div>
+              );
+            })}
+          </div>
+          <Legend
+            items={[
+              { label: "Unsorted",  color: "hsl(210 70% 55%)" },
+              { label: "Comparing", color: "hsl(40 90% 55%)" },
+              { label: "Swapping",  color: "hsl(0 72% 55%)" },
+              { label: "Sorted",    color: "hsl(150 65% 50%)" },
+            ]}
+          />
+        </div>
+
+        <div className="card overflow-hidden">
+          <CodeViewer
+            code={CODE}
+            highlightedLine={getHighlightedLine(step)}
+            title="bubble-sort.js"
+          />
+        </div>
+      </section>
+    </AlgoPageShell>
   );
 };
 

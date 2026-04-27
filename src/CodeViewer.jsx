@@ -1,19 +1,17 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 /**
- * Reusable code editor panel with step-by-step line highlighting.
- *
+ * Code viewer panel with synchronized line highlighting.
  * Props:
- *   code          — array of code line strings
- *   highlightedLine — 0-based index of the line to highlight (null = none)
- *   title         — optional label shown in the header bar
+ *   code            – string[]
+ *   highlightedLine – 0-based index (or null)
+ *   title           – filename in header
  */
-const CodeViewer = ({ code, highlightedLine, title = "Algorithm Code" }) => {
+const CodeViewer = ({ code, highlightedLine, title = "algorithm.js" }) => {
   const lineRefs = useRef([]);
 
-  // Auto-scroll to keep the highlighted line visible
   useEffect(() => {
-    if (highlightedLine !== null && lineRefs.current[highlightedLine]) {
+    if (highlightedLine != null && lineRefs.current[highlightedLine]) {
       lineRefs.current[highlightedLine].scrollIntoView({
         behavior: "smooth",
         block: "nearest",
@@ -23,35 +21,26 @@ const CodeViewer = ({ code, highlightedLine, title = "Algorithm Code" }) => {
 
   return (
     <div className="code-viewer">
-      {/* macOS-style header bar */}
       <div className="code-viewer-header">
         <div className="code-viewer-dots">
-          <span className="dot-red"></span>
-          <span className="dot-yellow"></span>
-          <span className="dot-green"></span>
+          <span className="dot-red" />
+          <span className="dot-yellow" />
+          <span className="dot-green" />
         </div>
         <span className="code-viewer-title">{title}</span>
-        <div style={{ width: 54 }} />
       </div>
 
-      {/* Code lines */}
       <div className="code-viewer-body">
-        {code.map((line, index) => (
+        {code.map((line, i) => (
           <div
-            key={index}
-            ref={(el) => (lineRefs.current[index] = el)}
-            className={`code-line${highlightedLine === index ? " code-line-active" : ""}`}
+            key={i}
+            ref={(el) => (lineRefs.current[i] = el)}
+            className={`code-line${highlightedLine === i ? " code-line-active" : ""}`}
           >
-            <span className="code-line-number">{index + 1}</span>
-            <span className="code-line-content">{line}</span>
+            <span className="code-line-number">{i + 1}</span>
+            <span className="code-line-content">{line || " "}</span>
           </div>
         ))}
-      </div>
-
-      {/* Legend */}
-      <div className="code-viewer-footer">
-        <span className="code-viewer-legend-dot" />
-        <span className="code-viewer-legend-text">Currently executing line</span>
       </div>
     </div>
   );

@@ -1,120 +1,62 @@
-// Reusable template styles for algorithm visualization pages
+/**
+ * Reusable layout primitives for algorithm pages — all themed via index.css tokens.
+ * Backwards-compatible exports: AlgoPageHeader, AlgoExplanation, AlgoVisualizationContainer.
+ */
+import ComplexityBadges from "./components/ComplexityBadges";
+import ExplanationBox from "./components/ExplanationBox";
 
-export const AlgoPageHeader = ({ icon, title, description, complexity }) => (
-  <div className="text-center max-w-4xl mx-auto mb-6 sm:mb-8 px-2">
-    <div className="inline-block mb-3 sm:mb-4">
-      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center glow" style={{ background: 'hsl(168 80% 50%)' }}>
-        <span className="text-xl sm:text-2xl">{icon}</span>
-      </div>
-    </div>
-    <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4">
-      <span className="gradient-text">{title}</span>
-    </h1>
-    
-    <div className="card rounded-2xl p-4 sm:p-6 text-left">
-      <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 gradient-text-secondary">About {title}</h2>
-      <p className="text-xs sm:text-sm mb-3 leading-relaxed" style={{ color: 'hsl(220 10% 60%)' }}>
-        {description}
-      </p>
-      {complexity && (
-        <div className="flex flex-wrap gap-3 sm:gap-4 mt-3 sm:mt-4">
-          <div className="px-3 sm:px-4 py-2 rounded-lg" style={{ background: 'hsl(220 16% 10%)', border: '1px solid hsl(220 14% 18%)' }}>
-            <span className="text-xs" style={{ color: 'hsl(220 10% 50%)' }}>Time</span>
-            <div className="font-semibold text-sm sm:text-base" style={{ color: 'hsl(40 90% 55%)' }}>{complexity.time}</div>
-          </div>
-          <div className="px-3 sm:px-4 py-2 rounded-lg" style={{ background: 'hsl(220 16% 10%)', border: '1px solid hsl(220 14% 18%)' }}>
-            <span className="text-xs" style={{ color: 'hsl(220 10% 50%)' }}>Space</span>
-            <div className="font-semibold text-sm sm:text-base" style={{ color: 'hsl(145 65% 48%)' }}>{complexity.space}</div>
-          </div>
-          {complexity.stable && (
-            <div className="px-3 sm:px-4 py-2 rounded-lg" style={{ background: 'hsl(220 16% 10%)', border: '1px solid hsl(220 14% 18%)' }}>
-              <span className="text-xs" style={{ color: 'hsl(220 10% 50%)' }}>Stability</span>
-              <div className="font-semibold text-sm sm:text-base" style={{ color: 'hsl(168 80% 50%)' }}>{complexity.stable}</div>
-            </div>
+export const AlgoPageHeader = ({ icon: Icon, title, description, complexity, badge }) => (
+  <header className="space-y-4">
+    {badge && <div className="header-badge">{badge}</div>}
+
+    <div className="flex items-start gap-4">
+      {Icon && (
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 glow"
+          style={{ background: "hsl(var(--accent))" }}
+        >
+          {typeof Icon === "function" ? (
+            <Icon size={22} strokeWidth={2.2} className="text-[hsl(var(--bg))]" />
+          ) : (
+            <span className="text-2xl">{Icon}</span>
           )}
         </div>
       )}
-    </div>
-  </div>
-);
-
-export const AlgoControls = ({ 
-  input, setInput, isPlaying, error, 
-  handlePlay, handlePause, handleReplay,
-  inputLabel = "Enter array (comma-separated numbers)",
-  placeholder = "e.g., 5,3,8,4,2",
-  examples = "Try: 5,3,8,4,2 or 64,34,25,12,22,11,90"
-}) => (
-  <div className="max-w-5xl mx-auto mb-6 sm:mb-8 px-2">
-    <div className="card rounded-2xl p-4 sm:p-6">
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end justify-between">
-        <div className="flex-1 w-full lg:w-auto">
-          <label className="text-xs sm:text-sm mb-2 block" style={{ color: 'hsl(220 10% 50%)' }}>
-            {inputLabel}
-          </label>
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={isPlaying}
-            placeholder={placeholder}
-            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-all outline-none text-sm sm:text-base"
-            style={{
-              background: 'hsl(220 20% 6%)',
-              border: '1px solid hsl(220 14% 22%)',
-              color: 'hsl(0 0% 96%)',
-            }}
-          />
-          {error && <p className="text-xs sm:text-sm mt-2" style={{ color: 'hsl(0 72% 58%)' }}>{error}</p>}
-          {examples && <p className="text-xs mt-2" style={{ color: 'hsl(220 10% 40%)' }}>{examples}</p>}
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <button 
-            onClick={handlePlay} disabled={isPlaying} 
-            className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold transition-all disabled:opacity-40 flex items-center gap-2 text-sm"
-            style={{ background: 'hsl(168 80% 50%)', color: 'hsl(220 20% 6%)' }}
-          >
-            ▶ Play
-          </button>
-          <button 
-            onClick={handlePause} disabled={!isPlaying}
-            className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold transition-all disabled:opacity-40 flex items-center gap-2 text-sm"
-            style={{ background: 'hsl(40 90% 55%)', color: 'hsl(220 20% 6%)' }}
-          >
-            ⏸ Pause
-          </button>
-          <button 
-            onClick={handleReplay}
-            className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold transition-all flex items-center gap-2 btn-outline text-sm"
-          >
-            ↻ Replay
-          </button>
-        </div>
+      <div className="flex-1 min-w-0">
+        <h1 className="display text-3xl sm:text-4xl font-extrabold tracking-tight">
+          <span className="text-[hsl(var(--text))]">{title.split(" ")[0]} </span>
+          <span className="gradient-text">{title.split(" ").slice(1).join(" ")}</span>
+        </h1>
+        {description && (
+          <p className="text-sm text-[hsl(var(--text-2))] mt-2 leading-relaxed max-w-3xl">
+            {description}
+          </p>
+        )}
       </div>
     </div>
-  </div>
+
+    {complexity && (
+      <ComplexityBadges
+        time={complexity.time}
+        space={complexity.space}
+        stable={complexity.stable}
+      />
+    )}
+  </header>
 );
 
 export const AlgoExplanation = ({ explanation, isPlaying }) => (
-  <div className="max-w-5xl mx-auto mb-6 sm:mb-8 px-2">
-    <div className="card rounded-2xl p-4 sm:p-6 text-center">
-      <div className="flex items-center justify-center gap-3 mb-2">
-        <div className={`w-2.5 h-2.5 rounded-full ${isPlaying ? 'pulse' : ''}`} style={{ background: isPlaying ? 'hsl(168 80% 50%)' : 'hsl(220 10% 40%)' }} />
-        <span className="text-xs uppercase tracking-wider font-semibold" style={{ color: 'hsl(220 10% 50%)' }}>
-          {isPlaying ? 'Running' : 'Ready'}
-        </span>
-      </div>
-      <p className="text-sm sm:text-lg font-medium" style={{ color: 'hsl(168 80% 60%)' }}>
-        {explanation || "Click Play to start the visualization"}
-      </p>
-    </div>
-  </div>
+  <ExplanationBox text={explanation} isPlaying={isPlaying} />
 );
 
 export const AlgoVisualizationContainer = ({ children, className = "" }) => (
-  <div className="max-w-6xl mx-auto px-2">
-    <div className={`card rounded-2xl p-4 sm:p-8 ${className}`}>
-      {children}
-    </div>
+  <div className={`min-h-[280px] flex items-center justify-center p-4 ${className}`}>
+    {children}
+  </div>
+);
+
+export const AlgoPageShell = ({ children }) => (
+  <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6">
+    <div className="max-w-6xl mx-auto space-y-6">{children}</div>
   </div>
 );

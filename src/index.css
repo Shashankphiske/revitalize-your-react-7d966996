@@ -168,7 +168,16 @@ h1, h2, h3, .display { font-family: var(--font-display); letter-spacing: -0.02em
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Legacy class kept for any leftover references */
-.btn-outline { @apply btn; }
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 16px; border-radius: 10px;
+  border: 1px solid hsl(var(--border));
+  background: transparent;
+  color: hsl(var(--text));
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s ease;
+}
+.btn-outline:hover { border-color: hsl(var(--accent) / 0.5); background: hsl(var(--accent) / 0.08); }
 
 /* ─── Range slider ────────────────────────────────────────────────────── */
 .range {

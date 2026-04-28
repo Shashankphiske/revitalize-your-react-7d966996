@@ -1,48 +1,24 @@
-import { Link } from "react-router-dom";
+import { Hash, Target, ArrowDownNarrowWide, Shuffle, Zap, Mountain, Layers } from "lucide-react";
+import CategoryPage from "../components/CategoryPage";
 
-const SortingAlgo = () => {
-  const algorithms = [
-    { to: "/bubble-sort", title: "Bubble Sort", desc: "Simple comparison-based sorting algorithm.", icon: "🫧" },
-    { to: "/selection-sort", title: "Selection Sort", desc: "Selects the minimum element and places it in position.", icon: "🎯" },
-    { to: "/insertion-sort", title: "Insertion Sort", desc: "Builds the sorted array one element at a time.", icon: "📌" },
-    { to: "/merge-sort", title: "Merge Sort", desc: "Divide and conquer sorting with O(n log n) time.", icon: "🔀" },
-    { to: "/quick-sort", title: "Quick Sort", desc: "Efficient partitioning-based sorting algorithm.", icon: "⚡" },
-    { to: "/heap-sort", title: "Heap Sort", desc: "Uses binary heap data structure for sorting.", icon: "🏔️" }
-  ];
+const items = [
+  { to: "/bubble-sort",    title: "Bubble Sort",    desc: "Simple comparison-based sorting that bubbles the largest element to the end of each pass.", Icon: Layers,             badge: "O(n²)" },
+  { to: "/selection-sort", title: "Selection Sort", desc: "Repeatedly selects the minimum element and places it in the next sorted position.",          Icon: Target,             badge: "O(n²)" },
+  { to: "/insertion-sort", title: "Insertion Sort", desc: "Builds the sorted array one element at a time by inserting each new element into place.",     Icon: ArrowDownNarrowWide, badge: "O(n²)" },
+  { to: "/merge-sort",     title: "Merge Sort",     desc: "Divide-and-conquer algorithm that splits the array, sorts each half, then merges them.",      Icon: Shuffle,            badge: "O(n log n)" },
+  { to: "/quick-sort",     title: "Quick Sort",     desc: "Efficient pivot-based partitioning algorithm with strong average-case performance.",          Icon: Zap,                badge: "O(n log n)" },
+  { to: "/heap-sort",      title: "Heap Sort",      desc: "Uses a binary max-heap to extract the largest element repeatedly into a sorted suffix.",      Icon: Mountain,           badge: "O(n log n)" },
+];
 
-  return (
-    <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6" style={{ color: 'hsl(var(--text-primary))' }}>
-      <div className="text-center max-w-4xl mx-auto mb-12 sm:mb-16">
-        <div className="inline-block mb-4">
-          <div className="w-14 h-14 rounded-xl flex items-center justify-center glow" style={{ background: 'hsl(var(--accent))' }}>
-            <span className="text-2xl">🔢</span>
-          </div>
-        </div>
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6">
-          <span className="gradient-text">Sorting Algorithms</span>
-        </h1>
-        <p className="text-base sm:text-lg mb-2" style={{ color: 'hsl(var(--text-secondary))' }}>
-          Master sorting techniques through interactive visualizations
-        </p>
-        <p className="text-sm" style={{ color: 'hsl(var(--text-muted))' }}>
-          Compare, understand, and analyze different sorting methods
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-7xl mx-auto">
-        {algorithms.map((algo, index) => (
-          <Link key={index} to={algo.to} className="category-card p-5 sm:p-6 group">
-            <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">{algo.icon}</div>
-            <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 group-hover:gradient-text transition-all" style={{ color: 'hsl(var(--text-primary))' }}>{algo.title}</h2>
-            <p className="text-sm mb-3 sm:mb-4 leading-relaxed" style={{ color: 'hsl(var(--text-muted))' }}>{algo.desc}</p>
-            <span className="gradient-text font-medium inline-flex items-center gap-2 group-hover:gap-3 transition-all text-sm">
-              Visualize →
-            </span>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-};
+const SortingAlgo = () => (
+  <CategoryPage
+    icon={Hash}
+    eyebrow="Category · Sorting"
+    title="Sorting Algorithms"
+    subtitle="Master comparison and divide-and-conquer sorting techniques."
+    description="Step-by-step playback · custom inputs · time & space complexity"
+    items={items}
+  />
+);
 
 export default SortingAlgo;

@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import { Binary, Dices } from "lucide-react";
 import CodeViewer from "../CodeViewer";
-import ControlButtons from "../ControlButtons";
-import {
-  AlgoPageHeader,
-  AlgoExplanation,
-  AlgoVisualizationContainer,
-} from "../AlgoPageTemplate";
+import { AlgoPageHeader, AlgoPageShell } from "../AlgoPageTemplate";
+import ControlBar from "../components/ControlBar";
+import ExplanationBox from "../components/ExplanationBox";
+import Legend from "../components/Legend";
+import useAlgoPlayer from "../hooks/useAlgoPlayer";
 
-const BINARY_SEARCH_CODE = [
+const CODE = [
   "function binarySearch(arr, target) {",
   "  let left = 0, right = arr.length - 1;",
   "  while (left <= right) {",
@@ -27,236 +27,114 @@ const getHighlightedLine = (step) => {
   return 8;
 };
 
+const explain = (step, target) => {
+  if (!step) return "";
+  if (step.found) return `Found ${target} at index ${step.mid}.`;
+  return `Checking mid=${step.mid}, value=${step.arr?.[step.mid]} — narrowing search range.`;
+};
+
+const fetchSteps = async (arr, num) => {
+  const res = await fetch("http://localhost:3000/searchingalgo/binarysearch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ arr: JSON.stringify(arr), num: parseInt(num) }),
+  });
+  return (await res.json()).arr;
+};
+
 const BinarySearchPage = () => {
   const [input, setInput] = useState("2,5,8,12,16,23,38,45,56,67,78");
   const [target, setTarget] = useState("23");
-  const [array, setArray] = useState([]);
-  const [steps, setSteps] = useState([]);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [explanation, setExplanation] = useState("");
-  const [error, setError] = useState("");
-  const [highlightedLine, setHighlightedLine] = useState(null);
-
-  const timerRef = useRef(null);
-  const highlightTimerRef = useRef(null);
-
-  const fetchSteps = async (arr, num) => {
-    const res = await fetch(
-      "http://localhost/searchingalgo/binarysearch",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          arr: JSON.stringify(arr),
-          num: parseInt(num),
-        }),
-      }
-    );
-    return (await res.json()).arr;
-  };
+  const player = useAlgoPlayer();
+  const { step, isPlaying, error, setError } = player;
 
   const handlePlay = async () => {
-    if (isPlaying) return;
-
-    if (steps.length === 0) {
-      const parsed = input
-        .split(",")
-        .map((n) => Number(n.trim()))
-        .filter((n) => !isNaN(n));
-
-      if (parsed.length === 0) {
-        setError("Invalid array!");
-        return;
-      }
-
-      if (isNaN(Number(target))) {
-        setError("Invalid target!");
-        return;
-      }
-
-      setError("");
-      setArray(parsed);
-      setCurrentStepIndex(0);
-      setExplanation("Starting Binary Search...");
-
-      const resSteps = await fetchSteps(parsed, target);
-      setSteps(resSteps);
+    if (player.steps.length === 0) {
+      const parsed = input.split(",").map((n) => Number(n.trim())).filter((n) => !isNaN(n));
+      if (parsed.length === 0) { setError("Invalid array."); return; }
+      if (isNaN(Number(target))) { setError("Invalid target."); return; }
+      const data = await player.load(() => fetchSteps(parsed, target));
+      if (!data) return;
     }
-
-    setIsPlaying(true);
+    player.play();
   };
 
-  const handlePause = () => {
-    setIsPlaying(false);
-    clearTimeout(timerRef.current);
+  const randomize = () => {
+    const n = 9 + Math.floor(Math.random() * 4);
+    const arr = Array.from({ length: n }, () => 1 + Math.floor(Math.random() * 99)).sort((a, b) => a - b);
+    setInput(arr.join(","));
+    setTarget(String(arr[Math.floor(Math.random() * arr.length)]));
+    player.reset();
   };
 
-  const handleReplay = () => {
-    clearTimeout(timerRef.current);
-    clearTimeout(highlightTimerRef.current);
-    setIsPlaying(false);
-    setSteps([]);
-    setArray([]);
-    setCurrentStepIndex(0);
-    setExplanation("");
-    setError("");
-    setHighlightedLine(null);
-  };
-
-  useEffect(() => {
-    if (!isPlaying || currentStepIndex >= steps.length) return;
-
-    //Early highlighting phase (200ms)
-    highlightTimerRef.current = setTimeout(() => {
-      const step = steps[currentStepIndex];
-      setHighlightedLine(getHighlightedLine(step));
-    }, 200);
-
-    // Full state update phase (1800ms)
-    timerRef.current = setTimeout(() => {
-      const step = steps[currentStepIndex];
-
-      setArray(step.arr);
-      setExplanation(
-        step.found
-          ? `🎯 Found ${target} at index ${step.mid}!`
-          : `Checking mid=${step.mid}, value=${step.arr[step.mid]}`
-      );
-
-      setCurrentStepIndex((prev) => prev + 1);
-    }, 1800);
-
-    return () => {
-      clearTimeout(highlightTimerRef.current);
-      clearTimeout(timerRef.current);
-    };
-  }, [isPlaying, currentStepIndex, steps]);
-
-  const currentStep = steps[currentStepIndex - 1] || {};
-  const { left = -1, right = -1, mid = -1, found = false } = currentStep;
-
-  const inputStyle = {
-    background: "hsl(220 20% 6%)",
-    border: "1px solid hsl(220 14% 22%)",
-    color: "hsl(0 0% 96%)",
-  };
+  const viewArr = step?.arr ?? input.split(",").map(Number).filter((n) => !isNaN(n));
+  const left = step?.left ?? -1;
+  const right = step?.right ?? -1;
+  const mid = step?.mid ?? -1;
+  const found = step?.found;
 
   return (
-    <div className="min-h-screen pt-24 sm:pt-32 pb-16 px-4 sm:px-6 text-white">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <AlgoPageShell>
+      <AlgoPageHeader
+        icon={Binary}
+        title="Binary Search"
+        description="Locate a target in a sorted array by repeatedly halving the search interval. Logarithmic time."
+        complexity={{ time: "O(log n)", space: "O(1)" }}
+        badge={<span>Searching Algorithm</span>}
+      />
 
-        {/* HEADER */}
-        <AlgoPageHeader
-          icon="🔎"
-          title="Binary Search"
-          description="Binary Search finds a target in a sorted array by halving the search space."
-          complexity={{ time: "O(log n)", space: "O(1)" }}
-        />
-
-        {/* INPUT */}
-        <div className="card p-5 sm:p-6 space-y-4">
-          <h3 className="text-lg font-semibold">Input</h3>
-
-          <div className="flex flex-col lg:flex-row gap-4 lg:items-end">
-            <div className="flex-1">
-              <label className="text-sm mb-1 block text-gray-400">
-                Sorted Array
-              </label>
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={isPlaying}
-                className="w-full px-4 py-3 rounded-xl"
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm mb-1 block text-gray-400">
-                Target
-              </label>
-              <input
-                value={target}
-                onChange={(e) => setTarget(e.target.value)}
-                disabled={isPlaying}
-                className="px-4 py-3 rounded-xl w-32"
-                style={inputStyle}
-              />
-            </div>
+      <section className="card p-5 space-y-4">
+        <div className="card-title">Input</div>
+        <div className="flex flex-col sm:flex-row gap-3 items-end">
+          <div className="flex-1 w-full">
+            <label className="field-label">Sorted Array</label>
+            <input className="input" value={input} onChange={(e) => setInput(e.target.value)} disabled={isPlaying} />
           </div>
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <div className="w-full sm:w-32">
+            <label className="field-label">Target</label>
+            <input className="input" value={target} onChange={(e) => setTarget(e.target.value)} disabled={isPlaying} />
+          </div>
+          <button className="btn" onClick={randomize} disabled={isPlaying}>
+            <Dices size={15} /> Random
+          </button>
         </div>
+        {error && <p className="text-xs text-[hsl(var(--accent-4))] font-mono">{error}</p>}
+      </section>
 
-        {/* CONTROLS + EXPLANATION */}
-        <div className="card p-5 space-y-4">
-          <ControlButtons
-            onPlay={handlePlay}
-            onPause={handlePause}
-            onReplay={handleReplay}
-            disabled={isPlaying}
+      <section className="card p-5 space-y-4">
+        <ControlBar player={player} onPlay={handlePlay} />
+        <ExplanationBox text={explain(step, target)} isPlaying={isPlaying} />
+      </section>
+
+      <section className="grid lg:grid-cols-2 gap-5">
+        <div className="card p-5">
+          <div className="card-title mb-4">Visualization</div>
+          <div className="flex flex-wrap items-center justify-center gap-3 min-h-[280px]">
+            {viewArr.map((value, idx) => {
+              let cls = "sbox sbox-default";
+              if (step) {
+                if (idx < left || idx > right) cls = "sbox sbox-default sbox-eliminated";
+                else if (idx === mid && found) cls = "sbox sbox-found";
+                else if (idx === mid) cls = "sbox sbox-mid";
+                else if (idx >= left && idx <= right) cls = "sbox sbox-range";
+              }
+              return <div key={idx} className={cls}>{value}</div>;
+            })}
+          </div>
+          <Legend
+            items={[
+              { label: "Search range", color: "hsl(249 92% 70%)" },
+              { label: "Mid",          color: "hsl(38 92% 50%)" },
+              { label: "Found",        color: "hsl(168 100% 42%)" },
+              { label: "Eliminated",   color: "hsl(220 30% 19%)" },
+            ]}
           />
-          <AlgoExplanation explanation={explanation} isPlaying={isPlaying} />
         </div>
-
-        {/* MAIN SPLIT */}
-        <div className="grid lg:grid-cols-2 gap-6">
-
-          {/* VISUALIZER */}
-          <div className="card p-4 flex flex-col">
-            <AlgoVisualizationContainer>
-              <div className="flex justify-center items-center min-h-[300px] flex-wrap gap-3">
-
-                {array.map((value, index) => {
-                  let bg = "#1f2937";
-                  let scale = "scale(0.95)";
-                  let shadow = "none";
-
-                  if (index === mid && found) {
-                    bg = "#22c55e";
-                    scale = "scale(1.25)";
-                    shadow = "0 0 20px rgba(34,197,94,0.8)";
-                  } else if (index === mid) {
-                    bg = "#f59e0b";
-                    scale = "scale(1.25)";
-                    shadow = "0 0 20px rgba(245,158,11,0.8)";
-                  } else if (index >= left && index <= right) {
-                    bg = "#8b5cf6";
-                    scale = "scale(1.05)";
-                  }
-
-                  return (
-                    <div
-                      key={index}
-                      className="w-14 h-14 flex items-center justify-center rounded-xl font-bold transition-all duration-500"
-                      style={{
-                        background: bg,
-                        transform: scale,
-                        boxShadow: shadow,
-                      }}
-                    >
-                      {value}
-                    </div>
-                  );
-                })}
-
-              </div>
-            </AlgoVisualizationContainer>
-          </div>
-
-          {/* CODE */}
-          <div className="card p-4 flex flex-col">
-            <CodeViewer
-              code={BINARY_SEARCH_CODE}
-              highlightedLine={highlightedLine}
-              title="binary-search.js"
-            />
-          </div>
-
+        <div className="card overflow-hidden">
+          <CodeViewer code={CODE} highlightedLine={getHighlightedLine(step)} title="binary-search.js" />
         </div>
-      </div>
-    </div>
+      </section>
+    </AlgoPageShell>
   );
 };
 

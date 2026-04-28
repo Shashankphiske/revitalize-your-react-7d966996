@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
+import { Mountain, Dices } from "lucide-react";
 import CodeViewer from "../CodeViewer";
-import ControlButtons from "../ControlButtons";
-import {
-  AlgoPageHeader,
-  AlgoExplanation,
-  AlgoVisualizationContainer,
-} from "../AlgoPageTemplate";
+import { AlgoPageHeader, AlgoPageShell } from "../AlgoPageTemplate";
+import ControlBar from "../components/ControlBar";
+import ExplanationBox from "../components/ExplanationBox";
+import Legend from "../components/Legend";
+import useAlgoPlayer from "../hooks/useAlgoPlayer";
 
-// ── SVG canvas constants — fixed coordinate space, no DOM measurement ────────
+// SVG layout constants
 const SVG_W = 520;
-const SVG_H = 400;
-const LEVEL_H = 90;
+const SVG_H = 360;
+const LEVEL_H = 80;
 const NODE_R = 22;
 
 const getSvgPosition = (index) => {
@@ -19,20 +19,16 @@ const getSvgPosition = (index) => {
   const posInLevel = index - levelStart;
   const nodesInLevel = Math.pow(2, level);
   const gap = SVG_W / nodesInLevel;
-  return {
-    x: gap * posInLevel + gap / 2,
-    y: level * LEVEL_H + 50,
-  };
+  return { x: gap * posInLevel + gap / 2, y: level * LEVEL_H + 50 };
 };
 
-// ── Pseudocode ────────────────────────────────────────────────────────────────
 const HEAP_SORT_CODE = [
   "function heapSort(arr) {",
   "  const n = arr.length;",
   "  // Build max heap",
   "  for (let i = floor(n/2)-1; i >= 0; i--)",
   "    heapify(arr, n, i);",
-  "  // Extract elements one by one",
+  "  // Extract one by one",
   "  for (let i = n-1; i > 0; i--) {",
   "    swap(arr[0], arr[i]);",
   "    heapify(arr, i, 0);",
@@ -66,7 +62,6 @@ const getHighlightedLine = (step) => {
   }
 };
 
-// ── Pure-JS step generator ────────────────────────────────────────────────────
 const generateHeapSortSteps = (input) => {
   const steps = [];
   const a = [...input];
@@ -76,7 +71,6 @@ const generateHeapSortSteps = (input) => {
     let largest = i;
     const left = 2 * i + 1;
     const right = 2 * i + 2;
-
     if (left < size) {
       steps.push({ arr: [...a], comparing: [i, left], heapRange: size, swapped: false, phase: "heapify_compare_left" });
       if (a[left] > a[largest]) largest = left;
@@ -105,239 +99,132 @@ const generateHeapSortSteps = (input) => {
   return steps;
 };
 
-const generateExplanation = (step) => {
+const explain = (step) => {
   if (!step) return "";
-  if (step.phase === "done") return "✅ Heap Sort complete!";
-  if (step.phase === "build_heap") return "Building max heap — heapifying next subtree…";
-  if (step.phase === "extract_swap") return `Moved max element to sorted position.`;
-  const [i, j] = step.comparing;
-  if (step.swapped) return `Swapped ${step.arr[j]} ↔ ${step.arr[i]} to restore heap property.`;
-  return `Comparing [${i}]=${step.arr[i]} with child [${j}]=${step.arr[j]}.`;
+  if (step.phase === "done") return "Heap Sort complete.";
+  if (step.phase === "build_heap") return "Building max heap — heapifying next subtree.";
+  if (step.phase === "extract_swap") return "Moved current maximum into its sorted position.";
+  const [i, j] = step.comparing || [];
+  if (step.swapped) return `Swapped ${step.arr[j]} ↔ ${step.arr[i]} to restore heap property`;
+  return `Comparing parent [${i}]=${step.arr[i]} with child [${j}]=${step.arr[j]}`;
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
 const HeapSortPage = () => {
-  const [input, setInput] = useState("5,3,8,4,2");
-  const [array, setArray] = useState([]);
-  const [steps, setSteps] = useState([]);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [explanation, setExplanation] = useState("");
-  const [highlightedLine, setHighlightedLine] = useState(null);
-  const [error, setError] = useState("");
-  const timerRef = useRef(null);
-  const highlightTimerRef = useRef(null);
+  const [input, setInput] = useState("5,3,8,4,2,7,1,6");
+  const player = useAlgoPlayer();
+  const { step, isPlaying, error, setError } = player;
 
-  const handlePlay = () => {
-    if (isPlaying) return;
-    if (steps.length === 0) {
+  const handlePlay = async () => {
+    if (player.steps.length === 0) {
       const parsed = input.split(",").map(Number).filter((n) => !isNaN(n));
-      if (parsed.length === 0) { setError("Invalid input!"); return; }
+      if (parsed.length === 0) { setError("Invalid input."); return; }
       if (parsed.length > 15) { setError("Max 15 elements for a clear view."); return; }
-      setError("");
-      setArray(parsed);
-      setCurrentStepIndex(0);
-      setExplanation("Building max heap…");
-      setSteps(generateHeapSortSteps(parsed));
+      const data = await player.load(() => generateHeapSortSteps(parsed));
+      if (!data) return;
     }
-    setIsPlaying(true);
+    player.play();
   };
 
-  const handlePause = () => {
-    setIsPlaying(false);
-    clearTimeout(timerRef.current);
+  const randomize = () => {
+    const n = 6 + Math.floor(Math.random() * 4);
+    const arr = Array.from({ length: n }, () => 1 + Math.floor(Math.random() * 99));
+    setInput(arr.join(","));
+    player.reset();
   };
 
-  const handleReplay = () => {
-    clearTimeout(timerRef.current);
-    setIsPlaying(false);
-    setSteps([]); setArray([]);
-    setCurrentStepIndex(0); setExplanation("");
-    setHighlightedLine(null); setError("");
-  };
-
-  useEffect(() => {
-    if (!isPlaying || currentStepIndex >= steps.length) {
-      if (isPlaying && currentStepIndex >= steps.length && steps.length > 0)
-        setIsPlaying(false);
-      return;
-    }
-
-    // Early highlighting phase (200ms)
-    highlightTimerRef.current = setTimeout(() => {
-      const s = steps[currentStepIndex];
-      setHighlightedLine(getHighlightedLine(s));
-    }, 200);
-
-    // Full state update phase (1800ms)
-    timerRef.current = setTimeout(() => {
-      const s = steps[currentStepIndex];
-      setArray(s.arr);
-      setExplanation(generateExplanation(s));
-      setCurrentStepIndex((i) => i + 1);
-    }, 1800);
-
-    return () => {
-      clearTimeout(highlightTimerRef.current);
-      clearTimeout(timerRef.current);
-    };
-  }, [isPlaying, currentStepIndex, steps]);
-
-  const step = steps[currentStepIndex - 1] || {};
-  const { comparing = [], heapRange = array.length, swapped = false } = step;
+  const array = step?.arr ?? input.split(",").map(Number).filter((n) => !isNaN(n));
+  const comparing = step?.comparing || [];
+  const heapRange = step?.heapRange ?? array.length;
+  const swapped = step?.swapped;
 
   return (
-    <div className="min-h-screen pt-24 sm:pt-32 pb-16 px-3 sm:px-6" style={{ color: "hsl(0 0% 96%)" }}>
-
+    <AlgoPageShell>
       <AlgoPageHeader
-        icon="🌳"
+        icon={Mountain}
         title="Heap Sort"
-        description="Converts the array into a max heap, then repeatedly extracts the maximum element to build the sorted output."
+        description="Builds a max-heap from the array, then repeatedly swaps the root with the last unsorted element, shrinking the heap until the array is sorted."
         complexity={{ time: "O(n log n)", space: "O(1)", stable: "Unstable" }}
+        badge={<span>Sorting Algorithm</span>}
       />
 
-      {/* Input */}
-      <div className="max-w-5xl mx-auto mb-6">
-        <div className="card rounded-2xl p-4 sm:p-6">
-          <label className="text-xs sm:text-sm mb-2 block" style={{ color: "hsl(220 10% 50%)" }}>
-            Enter array (comma-separated, max 15 elements)
-          </label>
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={isPlaying}
-            placeholder="e.g. 5,3,8,4,2"
-            className="w-full px-3 sm:px-4 py-2.5 rounded-xl outline-none text-sm"
-            style={{ background: "hsl(220 20% 6%)", border: "1px solid hsl(220 14% 22%)", color: "hsl(0 0% 96%)" }}
+      <section className="card p-5 space-y-4">
+        <div className="card-title">Input</div>
+        <div className="flex flex-col sm:flex-row gap-3 items-end">
+          <div className="flex-1 w-full">
+            <label className="field-label">Array (comma-separated, max 15)</label>
+            <input className="input" value={input} onChange={(e) => setInput(e.target.value)} disabled={isPlaying} placeholder="e.g. 5,3,8,4,2" />
+          </div>
+          <button className="btn" onClick={randomize} disabled={isPlaying}>
+            <Dices size={15} /> Random
+          </button>
+        </div>
+        {error && <p className="text-xs text-[hsl(var(--accent-4))] font-mono">{error}</p>}
+      </section>
+
+      <section className="card p-5 space-y-4">
+        <ControlBar player={player} onPlay={handlePlay} />
+        <ExplanationBox text={explain(step)} isPlaying={isPlaying} />
+      </section>
+
+      <section className="grid lg:grid-cols-2 gap-5">
+        <div className="card p-5">
+          <div className="card-title mb-4">Visualization</div>
+          <div className="flex items-center justify-center min-h-[360px]">
+            <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full max-w-xl" style={{ overflow: "visible" }}>
+              {array.map((_, i) => {
+                const left = 2 * i + 1;
+                const right = 2 * i + 2;
+                const from = getSvgPosition(i);
+                return (
+                  <React.Fragment key={i}>
+                    {left < array.length && (
+                      <line x1={from.x} y1={from.y} x2={getSvgPosition(left).x} y2={getSvgPosition(left).y} stroke="hsl(var(--border))" strokeWidth="1.5" />
+                    )}
+                    {right < array.length && (
+                      <line x1={from.x} y1={from.y} x2={getSvgPosition(right).x} y2={getSvgPosition(right).y} stroke="hsl(var(--border))" strokeWidth="1.5" />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+
+              {array.map((value, index) => {
+                const { x, y } = getSvgPosition(index);
+                let fill = "hsl(210 70% 55%)";
+                let radius = NODE_R;
+                let glow = "none";
+                if (index >= heapRange) { fill = "hsl(150 65% 45%)"; radius = NODE_R * 0.9; }
+                if (comparing.includes(index)) {
+                  fill = swapped ? "hsl(0 72% 55%)" : "hsl(40 90% 55%)";
+                  radius = NODE_R * 1.2;
+                  glow = swapped
+                    ? "drop-shadow(0 0 10px hsl(0 72% 55% / 0.9))"
+                    : "drop-shadow(0 0 10px hsl(40 90% 55% / 0.9))";
+                }
+                return (
+                  <g key={value} transform={`translate(${x}, ${y})`} style={{ transition: "transform 550ms cubic-bezier(0.4, 0, 0.2, 1)", filter: glow }}>
+                    <circle r={radius} fill={fill} style={{ transition: "r 250ms ease, fill 250ms ease" }} />
+                    <text textAnchor="middle" dominantBaseline="central" fontSize={13} fontWeight="700" fill="hsl(var(--bg))" style={{ userSelect: "none", pointerEvents: "none" }}>
+                      {value}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+          <Legend
+            items={[
+              { label: "In heap",   color: "hsl(210 70% 55%)" },
+              { label: "Comparing", color: "hsl(40 90% 55%)" },
+              { label: "Swapping",  color: "hsl(0 72% 55%)" },
+              { label: "Sorted",    color: "hsl(150 65% 45%)" },
+            ]}
           />
-          {error && <p className="text-sm mt-2" style={{ color: "hsl(0 72% 58%)" }}>{error}</p>}
         </div>
-      </div>
-
-      {/* Controls */}
-      <div className="max-w-5xl mx-auto mb-6 card rounded-2xl p-4 sm:p-6 space-y-4">
-        <ControlButtons onPlay={handlePlay} onPause={handlePause} onReplay={handleReplay} disabled={isPlaying} />
-        <AlgoExplanation explanation={explanation} isPlaying={isPlaying} />
-      </div>
-
-      {/* Two-column: Visualiser + Code */}
-      <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-6">
-
-        {/* Visualiser */}
-        <div className="card rounded-2xl p-4 flex flex-col">
-          <AlgoVisualizationContainer>
-            <div className="flex flex-col items-center justify-center min-h-[380px]">
-              <svg
-                viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-                className="w-full max-w-xl"
-                style={{ overflow: "visible" }}
-              >
-                {/* Edges */}
-                {array.map((_, i) => {
-                  const left = 2 * i + 1;
-                  const right = 2 * i + 2;
-                  const from = getSvgPosition(i);
-                  return (
-                    <React.Fragment key={i}>
-                      {left < array.length && (
-                        <line
-                          x1={from.x} y1={from.y}
-                          x2={getSvgPosition(left).x} y2={getSvgPosition(left).y}
-                          stroke="hsl(220 14% 28%)" strokeWidth="1.5"
-                        />
-                      )}
-                      {right < array.length && (
-                        <line
-                          x1={from.x} y1={from.y}
-                          x2={getSvgPosition(right).x} y2={getSvgPosition(right).y}
-                          stroke="hsl(220 14% 28%)" strokeWidth="1.5"
-                        />
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-
-                {/*
-                  Nodes — keyed by VALUE (not index).
-                  When two values swap, React moves their actual DOM <g> elements
-                  to the new transform position, so the CSS transition fires and
-                  you see each circle glide across the tree.
-                */}
-                {array.map((value, index) => {
-                  const { x, y } = getSvgPosition(index);
-
-                  let fill = "hsl(220 60% 55%)";
-                  let radius = NODE_R;
-                  let glow = "none";
-
-                  if (index >= heapRange) {
-                    fill = "hsl(145 60% 42%)";
-                    radius = NODE_R * 0.88;
-                  }
-                  if (comparing.includes(index)) {
-                    fill = swapped ? "hsl(0 72% 58%)" : "hsl(40 90% 55%)";
-                    radius = NODE_R * 1.22;
-                    glow = swapped
-                      ? "drop-shadow(0 0 10px hsl(0 72% 58% / 0.9))"
-                      : "drop-shadow(0 0 10px hsl(40 90% 55% / 0.9))";
-                  }
-
-                  return (
-                    <g
-                      key={value}
-                      transform={`translate(${x}, ${y})`}
-                      style={{
-                        transition: "transform 550ms cubic-bezier(0.4, 0, 0.2, 1)",
-                        filter: glow,
-                      }}
-                    >
-                      <circle
-                        r={radius}
-                        fill={fill}
-                        style={{ transition: "r 250ms ease, fill 250ms ease" }}
-                      />
-                      <text
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        fontSize={14}
-                        fontWeight="700"
-                        fill="hsl(220 20% 6%)"
-                        style={{ userSelect: "none", pointerEvents: "none" }}
-                      >
-                        {value}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-          </AlgoVisualizationContainer>
-
-          {/* Legend */}
-          {array.length > 0 && (
-            <div className="flex flex-wrap gap-3 mt-4 text-xs" style={{ color: "hsl(220 10% 60%)" }}>
-              {[
-                { color: "hsl(220 60% 55%)", label: "In heap" },
-                { color: "hsl(40 90% 55%)", label: "Comparing" },
-                { color: "hsl(0 72% 58%)", label: "Swapping" },
-                { color: "hsl(145 60% 42%)", label: "Sorted" },
-              ].map(({ color, label }) => (
-                <span key={label} className="flex items-center gap-1.5">
-                  <span className="inline-block w-3 h-3 rounded-full" style={{ background: color }} />
-                  {label}
-                </span>
-              ))}
-            </div>
-          )}
+        <div className="card overflow-hidden">
+          <CodeViewer code={HEAP_SORT_CODE} highlightedLine={getHighlightedLine(step)} title="heap-sort.js" />
         </div>
-
-        {/* Code viewer */}
-        <div className="card rounded-2xl p-4 flex flex-col">
-          <CodeViewer code={HEAP_SORT_CODE} highlightedLine={highlightedLine} title="heapSort.js" />
-        </div>
-
-      </div>
-    </div>
+      </section>
+    </AlgoPageShell>
   );
 };
 

@@ -15,10 +15,8 @@ export const AlgoPageHeader = ({ icon: Icon, title, description, complexity, bad
           className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 glow"
           style={{ background: "hsl(var(--accent))" }}
         >
-          {typeof Icon === "function" ? (
+          {Icon && (
             <Icon size={22} strokeWidth={2.2} className="text-[hsl(var(--bg))]" />
-          ) : (
-            <span className="text-2xl">{Icon}</span>
           )}
         </div>
       )}

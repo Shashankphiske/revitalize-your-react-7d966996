@@ -101,7 +101,7 @@ const AStarPage = () => {
 
   const fetchSteps = async (adj, start, end, heuristic) => {
     const res = await fetch(
-      "http://localhost/shortestpathrouter/astaralgo",
+      "http://localhost:3000/shortestpathrouter/astaralgo",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

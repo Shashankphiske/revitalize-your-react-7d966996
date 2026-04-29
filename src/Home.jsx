@@ -51,11 +51,6 @@ const Home = () => (
            style={{ background: "hsl(var(--accent-2))" }} />
 
       <div className="relative max-w-5xl mx-auto px-6 py-16 md:py-24 text-center">
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-          <div className="header-badge">
-            <Sparkles size={12} /> IEEE Research Prototype
-          </div>
-        </motion.div>
 
         <motion.h1
           initial="hidden" animate="visible" variants={fadeUp} custom={1}

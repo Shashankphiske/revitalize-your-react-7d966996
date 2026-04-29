@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import CodeViewer from "../CodeViewer";
+import CodeViewer from "./CodeViewer";
 import { AlgoPageHeader, AlgoPageShell } from "./AlgoPageTemplate";
 import ControlBar from "./components/ControlBar";
 import ExplanationBox from "./components/ExplanationBox";

@@ -52,6 +52,8 @@ import StackAlgo from "./pages/StackAlgo";
 import QueueAlgo from "./pages/QueueAlgo";
 import LinkedListAlgo from "./pages/LinkedListAlgo";
 import ShortestPathAlgo from "./pages/ShortestPathAlgo";
+import Quiz from "./pages/Quiz";
+import Compare from "./pages/Compare";
 
 import DynamicAlgorithms from "./algo/DynamicAlgorithms";
 import FibonacciPage from "./algo/FibonacciPage";
@@ -119,6 +121,10 @@ const App = () => {
         <Route path="/dynamicalgorithms" element={<DynamicAlgorithms/>} />
         <Route path="/dp/fibonacci" element={<FibonacciPage />} />
         <Route path="/dp/coinchange" element={<CoinChangePage />} />
+
+        {/* Utilities */}
+        <Route path="/quiz" element={<Quiz />} />
+        <Route path="/compare" element={<Compare />} />
 
       </Routes>
     </Router>

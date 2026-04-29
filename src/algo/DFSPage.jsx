@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useMemo, useState } from "react";
+import { Mountain, Plus } from "lucide-react";
 import CodeViewer from "../CodeViewer";
-import ControlButtons from "../ControlButtons";
-import {
-  AlgoPageHeader,
-  AlgoExplanation,
-  AlgoVisualizationContainer,
-} from "../AlgoPageTemplate";
+import { AlgoPageHeader, AlgoPageShell } from "../AlgoPageTemplate";
+import ControlBar from "../components/ControlBar";
+import ExplanationBox from "../components/ExplanationBox";
+import Legend from "../components/Legend";
+import GraphViz from "../components/GraphViz";
+import useAlgoPlayer from "../hooks/useAlgoPlayer";
 
-const DFS_CODE = [
+const CODE = [
   "function dfs(graph, start, target) {",
   "  const stack = [start];",
   "  const visited = new Set();",
@@ -25,11 +26,13 @@ const DFS_CODE = [
   "}",
 ];
 
-const getHighlightedLine = (step) => {
-  if (!step) return null;
-  if (step.found) return 7;
-  if (step.current !== undefined) return 4;
-  return 13;
+const fetchSteps = async (adjList, root, num) => {
+  const res = await fetch("http://localhost:3000/graphalgo/depthfirstsearch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ adjList, root, num }),
+  });
+  return (await res.json()).arr;
 };
 
 const DFSPage = () => {
@@ -41,249 +44,87 @@ const DFSPage = () => {
     { node: "4", neighbors: "1" },
     { node: "5", neighbors: "2" },
   ]);
-
   const [root, setRoot] = useState("0");
   const [target, setTarget] = useState("5");
-  const [steps, setSteps] = useState([]);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [visited, setVisited] = useState(new Set());
-  const [error, setError] = useState("");
-  const [highlightedLine, setHighlightedLine] = useState(null);
-  const [explanation, setExplanation] = useState("");
+  const player = useAlgoPlayer();
+  const { step, index, isPlaying, error, setError } = player;
 
-  const timerRef = useRef(null);
-
-  const buildAdjList = () => {
-    const adj = {};
-    for (let item of nodes) {
-      const node = item.node.trim();
-      if (!node) continue;
-      adj[node] = item.neighbors
-        .split(",")
-        .map((n) => n.trim())
-        .filter(Boolean);
+  const adj = useMemo(() => {
+    const a = {};
+    for (const n of nodes) {
+      const k = n.node.trim();
+      if (!k) continue;
+      a[k] = n.neighbors.split(",").map((s) => s.trim()).filter(Boolean);
     }
-    return adj;
-  };
-
-  const fetchDFSSteps = async (adjList, root, target) => {
-    const res = await fetch(
-      "http://localhost:3000/graphalgo/depthfirstsearch",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adjList, root, num: target }),
-      }
-    );
-    return (await res.json()).arr;
-  };
+    return a;
+  }, [nodes]);
 
   const handlePlay = async () => {
-    if (isPlaying) return;
-
-    try {
-      const adjList = buildAdjList();
-
-      if (!adjList[root]) {
-        setError(`Root node "${root}" does not exist.`);
-        return;
-      }
-
-      for (let u in adjList) {
-        for (let v of adjList[u]) {
-          if (!adjList[v]) {
-            setError(`Neighbor "${v}" is not defined.`);
-            return;
-          }
-        }
-      }
-
-      setError("");
-      setVisited(new Set());
-      setCurrentStepIndex(0);
-      setExplanation("Starting DFS traversal...");
-
-      const dfsSteps = await fetchDFSSteps(adjList, root, target);
-      setSteps(dfsSteps);
-      setIsPlaying(true);
-    } catch {
-      setError("Invalid graph input.");
+    if (player.steps.length === 0) {
+      if (!adj[root]) { setError(`Root "${root}" not defined`); return; }
+      const data = await player.load(() => fetchSteps(adj, root, target));
+      if (!data) return;
     }
+    player.play();
   };
 
-  const handlePause = () => {
-    setIsPlaying(false);
-    clearTimeout(timerRef.current);
-  };
-
-  const handleReplay = () => {
-    clearTimeout(timerRef.current);
-    setIsPlaying(false);
-    setSteps([]);
-    setVisited(new Set());
-    setCurrentStepIndex(0);
-    setExplanation("");
-  };
-
-  useEffect(() => {
-    if (!isPlaying || currentStepIndex >= steps.length) return;
-
-    timerRef.current = setTimeout(() => {
-      const step = steps[currentStepIndex];
-
-      setVisited((prev) => new Set(prev).add(step.current));
-      setHighlightedLine(getHighlightedLine(step));
-
-      setExplanation(
-        step.found
-          ? `🎯 Target node ${target} found!`
-          : `Visiting node ${step.current}`
-      );
-
-      setCurrentStepIndex((i) => i + 1);
-    }, 1800);
-
-    return () => clearTimeout(timerRef.current);
-  }, [isPlaying, currentStepIndex, steps]);
-
-  const step = steps[currentStepIndex - 1] || {};
-  const { current: currentNode, stack = [], found = false } = step;
-
-  const adjList = buildAdjList();
-  const nodeKeys = Object.keys(adjList);
-
-  const radius = 160,
-    cx = 260,
-    cy = 220;
-
-  const positions = {};
-  nodeKeys.forEach((node, i) => {
-    const angle = (2 * Math.PI * i) / nodeKeys.length;
-    positions[node] = {
-      x: cx + radius * Math.cos(angle),
-      y: cy + radius * Math.sin(angle),
-    };
-  });
-
-  const inputStyle = {
-    background: "hsl(220 20% 6%)",
-    border: "1px solid hsl(220 14% 22%)",
-    color: "hsl(0 0% 96%)",
-  };
+  const visited = new Set(player.steps.slice(0, index + 1).map((s) => String(s.current)));
+  const currentNode = step?.current != null ? String(step.current) : null;
+  const found = step?.found ?? false;
+  const explain = step
+    ? (found ? `🎯 Target ${target} found` : `Visiting node ${step.current}`)
+    : "";
+  const highlightedLine = step ? (found ? 7 : step.current !== undefined ? 4 : 13) : null;
 
   return (
-    <div className="min-h-screen pt-24 sm:pt-32 pb-16 px-4 sm:px-6 text-white">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <AlgoPageShell>
+      <AlgoPageHeader
+        icon={Mountain}
+        title="Depth-First Search"
+        description="Explore as far as possible along each branch before backtracking, using a stack."
+        complexity={{ time: "O(V + E)", space: "O(V)" }}
+        badge="Graph"
+      />
 
-        {/* HEADER */}
-        <AlgoPageHeader
-          icon="🔍"
-          title="Depth-First Search"
-          description="DFS explores as far as possible along each branch before backtracking."
-          complexity={{ time: "O(V + E)", space: "O(V)" }}
-        />
-
-        {/* INPUT */}
-        <div className="card p-5 space-y-4">
-          <h3 className="text-lg font-semibold">Graph Input</h3>
-
-          {nodes.map((item, idx) => (
-            <div key={idx} className="flex gap-2 flex-wrap sm:flex-nowrap">
-              <input
-                value={item.node}
-                disabled={isPlaying}
-                onChange={(e) => {
-                  const copy = [...nodes];
-                  copy[idx].node = e.target.value;
-                  setNodes(copy);
-                }}
-                className="px-3 py-2 rounded-xl w-20"
-                style={inputStyle}
-                placeholder="Node"
-              />
-
-              <input
-                value={item.neighbors}
-                disabled={isPlaying}
-                onChange={(e) => {
-                  const copy = [...nodes];
-                  copy[idx].neighbors = e.target.value;
-                  setNodes(copy);
-                }}
-                className="px-3 py-2 rounded-xl flex-1"
-                style={inputStyle}
-                placeholder="Neighbors"
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* CONTROLS */}
-        <div className="card p-5 space-y-4">
-          <ControlButtons
-            onPlay={handlePlay}
-            onPause={handlePause}
-            onReplay={handleReplay}
-            disabled={isPlaying}
-          />
-          <AlgoExplanation explanation={explanation} isPlaying={isPlaying} />
-        </div>
-
-        {/* VISUAL + CODE */}
-        <div className="grid lg:grid-cols-2 gap-6 items-stretch">
-
-          {/* VISUAL */}
-          <div className="card p-4 flex flex-col">
-            <AlgoVisualizationContainer>
-              <svg viewBox="0 0 520 440" className="w-full h-[360px] rounded-xl">
-                {nodeKeys.map((u) =>
-                  adjList[u].map((v, i) =>
-                    positions[u] && positions[v] ? (
-                      <line
-                        key={`${u}-${v}-${i}`}
-                        x1={positions[u].x}
-                        y1={positions[u].y}
-                        x2={positions[v].x}
-                        y2={positions[v].y}
-                        stroke="#333"
-                      />
-                    ) : null
-                  )
-                )}
-
-                {nodeKeys.map((node) => {
-                  let color = "#3b82f6";
-                  if (visited.has(node)) color = "#22c55e";
-                  if (node === currentNode) color = "#f59e0b";
-                  if (found && node === target) color = "#ef4444";
-
-                  return (
-                    <g key={node}>
-                      <circle cx={positions[node].x} cy={positions[node].y} r="22" fill={color} />
-                      <text x={positions[node].x} y={positions[node].y + 5} textAnchor="middle" fill="#000">
-                        {node}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
-            </AlgoVisualizationContainer>
+      <section className="card p-5 space-y-3">
+        <div className="card-title">Graph input</div>
+        {nodes.map((item, idx) => (
+          <div key={idx} className="grid grid-cols-[80px_1fr] gap-2">
+            <input className="input" value={item.node}      disabled={isPlaying} placeholder="Node"     onChange={(e) => { const c = [...nodes]; c[idx].node = e.target.value; setNodes(c); }} />
+            <input className="input" value={item.neighbors} disabled={isPlaying} placeholder="Neighbors" onChange={(e) => { const c = [...nodes]; c[idx].neighbors = e.target.value; setNodes(c); }} />
           </div>
-
-          {/* CODE */}
-          <div className="card p-4 flex flex-col">
-            <CodeViewer
-              code={DFS_CODE}
-              highlightedLine={highlightedLine}
-              title="dfs.js"
-            />
-          </div>
-
+        ))}
+        <button className="btn" onClick={() => setNodes([...nodes, { node: "", neighbors: "" }])} disabled={isPlaying}><Plus size={14} /> Add node</button>
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          <div><label className="field-label">Root</label><input className="input" value={root}   onChange={(e) => setRoot(e.target.value)}   disabled={isPlaying} /></div>
+          <div><label className="field-label">Target</label><input className="input" value={target} onChange={(e) => setTarget(e.target.value)} disabled={isPlaying} /></div>
         </div>
+        {error && <p className="text-xs text-[hsl(var(--accent-4))] font-mono">{error}</p>}
+      </section>
 
-      </div>
-    </div>
+      <section className="card p-5 space-y-4">
+        <ControlBar player={player} onPlay={handlePlay} />
+        <ExplanationBox text={explain} isPlaying={isPlaying} />
+      </section>
+
+      <section className="grid lg:grid-cols-2 gap-5">
+        <div className="card p-5">
+          <div className="card-title mb-4">Visualization</div>
+          <div className="min-h-[320px] flex items-center justify-center">
+            <GraphViz adj={adj} visited={visited} currentNode={currentNode} target={target} found={found} />
+          </div>
+          <Legend items={[
+            { label: "Idle",    color: "hsl(220 30% 19%)" },
+            { label: "Visited", color: "hsl(168 100% 42%)" },
+            { label: "Current", color: "hsl(38 92% 50%)" },
+            { label: "Target found", color: "hsl(0 84% 60%)" },
+          ]} />
+        </div>
+        <div className="card overflow-hidden">
+          <CodeViewer code={CODE} highlightedLine={highlightedLine} title="dfs.js" />
+        </div>
+      </section>
+    </AlgoPageShell>
   );
 };
 

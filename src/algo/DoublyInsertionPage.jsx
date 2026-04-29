@@ -1,20 +1,23 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import { Link } from "lucide-react";
 import CodeViewer from "../CodeViewer";
-import ControlButtons from "../ControlButtons";
-import { AlgoPageHeader, AlgoExplanation, AlgoVisualizationContainer } from "../AlgoPageTemplate";
+import { AlgoPageHeader, AlgoPageShell } from "../AlgoPageTemplate";
+import ControlBar from "../components/ControlBar";
+import ExplanationBox from "../components/ExplanationBox";
+import Legend from "../components/Legend";
+import ListViz from "../components/ListViz";
+import useAlgoPlayer from "../hooks/useAlgoPlayer";
 
 const CODE = [
   "function insert(head, value, pos) {",
   "  const newNode = new Node(value);",
   "  if (pos === 0) {",
-  "    newNode.prev = null;",
   "    newNode.next = head;",
   "    if (head) head.prev = newNode;",
   "    return newNode;",
   "  }",
   "  let curr = head;",
-  "  for (let i = 0; i < pos - 1; i++)",
-  "    curr = curr.next;",
+  "  for (let i = 0; i < pos - 1; i++) curr = curr.next;",
   "  newNode.next = curr.next;",
   "  newNode.prev = curr;",
   "  if (curr.next) curr.next.prev = newNode;",
@@ -23,279 +26,82 @@ const CODE = [
   "}",
 ];
 
-const getHighlightedLine = (step) => {
-  if (!step) return null;
-  if (step.action === "insert-complete") return 14;
-  if (step.current !== null && step.current !== undefined) return 10;
-  return null;
+const fetchSteps = async (arr, value, index) => {
+  const res = await fetch("http://localhost:3000/linkedlist/doublyinsertion", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ arr, value, index }),
+  });
+  return (await res.json()).steps;
 };
 
 const DoublyInsertionPage = () => {
-  const [initialList, setInitialList] = useState("10,20,30,40");
-  const [insertValue, setInsertValue] = useState("25");
-  const [insertIndex, setInsertIndex] = useState("2");
-
-  const [steps, setSteps] = useState([]);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  const [explanation, setExplanation] = useState("");
-  const [error, setError] = useState("");
-  const [highlightedLine, setHighlightedLine] = useState(null);
-
-  const timerRef = useRef(null);
-  const highlightTimerRef = useRef(null);
-
-  const fetchSteps = async (arr, value, index) => {
-    const res = await fetch("http://localhost:3000/linkedlist/doublyinsertion", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        arr,
-        value,
-        index,
-      }),
-    });
-    return (await res.json()).steps;
-  };
+  const [list, setList] = useState("10,20,30,40");
+  const [value, setValue] = useState("25");
+  const [index, setIndex] = useState("2");
+  const player = useAlgoPlayer();
+  const { step, isPlaying, error, setError } = player;
 
   const handlePlay = async () => {
-    if (isPlaying) return;
-
-    try {
-      if (steps.length === 0) {
-        const arr = initialList
-          .split(",")
-          .map((n) => Number(n.trim()))
-          .filter((n) => !isNaN(n));
-
-        const value = parseInt(insertValue);
-        const index = parseInt(insertIndex);
-
-        if (arr.length === 0) {
-          setError("Invalid list!");
-          return;
-        }
-
-        if (isNaN(value)) {
-          setError("Invalid value!");
-          return;
-        }
-
-        if (isNaN(index) || index < 0 || index > arr.length) {
-          setError(`Index must be between 0 and ${arr.length}`);
-          return;
-        }
-
-        setError("");
-        setCurrentStepIndex(0);
-        setExplanation("Starting doubly linked list insertion...");
-
-        const fetchedSteps = await fetchSteps(arr, value, index);
-        setSteps(fetchedSteps || []);
-      }
-
-      setIsPlaying(true);
-    } catch (err) {
-      setError("Failed to process input.");
+    if (player.steps.length === 0) {
+      const arr = list.split(",").map((n) => Number(n.trim())).filter((n) => !isNaN(n));
+      const v = parseInt(value), i = parseInt(index);
+      if (arr.length === 0) { setError("Invalid list"); return; }
+      if (isNaN(v)) { setError("Invalid value"); return; }
+      if (isNaN(i) || i < 0 || i > arr.length) { setError(`Index must be 0-${arr.length}`); return; }
+      const data = await player.load(() => fetchSteps(arr, v, i));
+      if (!data) return;
     }
+    player.play();
   };
 
-  const handlePause = () => {
-    setIsPlaying(false);
-    clearTimeout(timerRef.current);
-  };
-
-  const handleReplay = () => {
-    clearTimeout(timerRef.current);
-    clearTimeout(highlightTimerRef.current);
-    setIsPlaying(false);
-    setSteps([]);
-    setCurrentStepIndex(0);
-    setExplanation("");
-    setError("");
-    setHighlightedLine(null);
-  };
-
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    if (currentStepIndex < steps.length) {
-      // Early highlighting phase (200ms)
-      highlightTimerRef.current = setTimeout(() => {
-        const step = steps[currentStepIndex];
-        setHighlightedLine(getHighlightedLine(step));
-      }, 200);
-
-      // Full state update phase (1500ms)
-      timerRef.current = setTimeout(() => {
-        const step = steps[currentStepIndex];
-
-        if (step.current !== undefined) {
-          setExplanation(`Inserting ${step.current} at index ${insertIndex}...`);
-        } else {
-          setExplanation("Insertion completed successfully.");
-        }
-
-        setCurrentStepIndex((prev) => prev + 1);
-      }, 1500);
-    } else {
-      setExplanation("✅ Doubly Linked List insertion complete");
-      setIsPlaying(false);
-    }
-
-    return () => {
-      clearTimeout(highlightTimerRef.current);
-      clearTimeout(timerRef.current);
-    };
-  }, [isPlaying, currentStepIndex, steps]);
-
-  const currentStep = steps[currentStepIndex - 1] || {};
-
-  const inputStyle = {
-    background: "hsl(220 20% 6%)",
-    border: "1px solid hsl(220 14% 22%)",
-    color: "hsl(0 0% 96%)",
-  };
+  const items = step?.list ?? list.split(",").map(Number).filter((n) => !isNaN(n));
+  const explain = step
+    ? (step.current != null ? `Inserting ${step.current} at index ${index}` : "Insertion complete")
+    : "";
+  const highlightedLine = step ? (step.action === "insert-complete" ? 12 : step.current != null ? 9 : null) : null;
 
   return (
-    <div
-      className="min-h-screen pt-32 pb-16 px-6"
-      style={{ color: "hsl(0 0% 96%)" }}
-    >
+    <AlgoPageShell>
       <AlgoPageHeader
-        icon="🔗"
+        icon={Link}
         title="Doubly Linked List – Insertion"
-        description="Insertion involves creating a new node and adjusting both prev and next pointers."
+        description="Insert a node by rewiring both prev and next pointers."
         complexity={{ time: "O(n)", space: "O(1)" }}
+        badge="Doubly Linked List"
       />
 
-      <div className="max-w-5xl mx-auto mb-8">
-        <div className="card rounded-2xl p-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <label
-                className="text-sm mb-2 block"
-                style={{ color: "hsl(220 10% 50%)" }}
-              >
-                List
-              </label>
-              <input
-                value={initialList}
-                onChange={(e) => setInitialList(e.target.value)}
-                disabled={isPlaying}
-                className="w-full px-4 py-3 rounded-xl outline-none"
-                style={inputStyle}
-              />
-            </div>
+      <section className="card p-5 space-y-4">
+        <div className="card-title">Input</div>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <div><label className="field-label">List</label><input className="input" value={list} onChange={(e) => setList(e.target.value)} disabled={isPlaying} /></div>
+          <div><label className="field-label">Value</label><input className="input" value={value} onChange={(e) => setValue(e.target.value)} disabled={isPlaying} /></div>
+          <div><label className="field-label">Index</label><input className="input" value={index} onChange={(e) => setIndex(e.target.value)} disabled={isPlaying} /></div>
+        </div>
+        {error && <p className="text-xs text-[hsl(var(--accent-4))] font-mono">{error}</p>}
+      </section>
 
-            <div>
-              <label
-                className="text-sm mb-2 block"
-                style={{ color: "hsl(220 10% 50%)" }}
-              >
-                Value
-              </label>
-              <input
-                value={insertValue}
-                onChange={(e) => setInsertValue(e.target.value)}
-                disabled={isPlaying}
-                className="px-4 py-3 rounded-xl w-24 outline-none"
-                style={inputStyle}
-              />
-            </div>
+      <section className="card p-5 space-y-4">
+        <ControlBar player={player} onPlay={handlePlay} />
+        <ExplanationBox text={explain} isPlaying={isPlaying} />
+      </section>
 
-            <div>
-              <label
-                className="text-sm mb-2 block"
-                style={{ color: "hsl(220 10% 50%)" }}
-              >
-                Index
-              </label>
-              <input
-                value={insertIndex}
-                onChange={(e) => setInsertIndex(e.target.value)}
-                disabled={isPlaying}
-                className="px-4 py-3 rounded-xl w-24 outline-none"
-                style={inputStyle}
-              />
-            </div>
+      <section className="grid lg:grid-cols-2 gap-5">
+        <div className="card p-5">
+          <div className="card-title mb-4">Visualization</div>
+          <div className="min-h-[200px] flex items-center justify-center">
+            <ListViz items={items} highlight={step?.current != null ? [step.current] : []} connector="⇄" />
           </div>
-
-          {error && (
-            <p
-              className="text-sm mt-2"
-              style={{ color: "hsl(0 72% 58%)" }}
-            >
-              {error}
-            </p>
-          )}
+          <Legend items={[
+            { label: "Idle",    color: "hsl(220 30% 19%)" },
+            { label: "Current", color: "hsl(38 92% 50%)" },
+          ]} />
         </div>
-      </div>
-
-      <ControlButtons
-        onPlay={handlePlay}
-        onPause={handlePause}
-        onReplay={handleReplay}
-        disabled={isPlaying}
-      />
-
-      <AlgoExplanation explanation={explanation} isPlaying={isPlaying} />
-
-      <div className="max-w-5xl mx-auto grid lg:grid-cols-2 gap-6">
-        <AlgoVisualizationContainer>
-        <div className="flex items-center justify-center gap-2 flex-wrap">
-          {currentStep.list &&
-            currentStep.list.map((value, idx) => {
-              let bg = "hsl(220 60% 55%)";
-              let scale = "scale(1)";
-              let shadow = "none";
-
-              if (currentStep.current === value) {
-                bg = "hsl(40 90% 55%)";
-                scale = "scale(1.25)";
-                shadow = "0 0 20px hsl(40 90% 55% / 0.8)";
-              }
-
-              return (
-                <React.Fragment key={idx}>
-                  <div
-                    className="w-20 h-14 flex items-center justify-center text-xl font-bold rounded-xl transition-all duration-500"
-                    style={{
-                      background: bg,
-                      color: "hsl(220 20% 6%)",
-                      transform: scale,
-                      boxShadow: shadow,
-                    }}
-                  >
-                    {value}
-                  </div>
-
-                  {idx < currentStep.list.length - 1 && (
-                    <span
-                      className="text-2xl"
-                      style={{ color: "hsl(220 10% 40%)" }}
-                    >
-                      ⇄
-                    </span>
-                  )}
-                </React.Fragment>
-              );
-            })}
+        <div className="card overflow-hidden">
+          <CodeViewer code={CODE} highlightedLine={highlightedLine} title="doubly-insertion.js" />
         </div>
-        </AlgoVisualizationContainer>
-
-        <div className="card p-4">
-          <CodeViewer
-            code={CODE}
-            highlightedLine={highlightedLine}
-            title="doublyInsert ion.js"
-          />
-        </div>
-      </div>
-    </div>
+      </section>
+    </AlgoPageShell>
   );
 };
 

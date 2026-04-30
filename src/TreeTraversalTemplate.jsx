@@ -6,13 +6,14 @@ import ControlBar from "./components/ControlBar";
 import ExplanationBox from "./components/ExplanationBox";
 import Legend from "./components/Legend";
 import TreeViz from "./components/TreeViz";
+import LeetCodeSection from "./components/LeetCodeSection";
 import useAlgoPlayer from "./hooks/useAlgoPlayer";
 
 /**
  * Shared template for in/pre/post-order traversals.
  * Backend returns { arr: [nodeId, …] } — list of visited nodes in order.
  */
-const TreeTraversalTemplate = ({ icon: Icon, title, description, order, endpoint, code, codeLine }) => {
+const TreeTraversalTemplate = ({ icon: Icon, title, description, order, endpoint, code, codeLine, leetcodeSlug }) => {
   const [nodes, setNodes] = useState([
     { node: "1", left: "2", right: "3" },
     { node: "2", left: "4", right: "5" },
@@ -115,6 +116,8 @@ const TreeTraversalTemplate = ({ icon: Icon, title, description, order, endpoint
           <CodeViewer code={code} highlightedLine={step != null ? codeLine : null} title={`${endpoint}.js`} />
         </div>
       </section>
+
+      {leetcodeSlug && <LeetCodeSection slug={leetcodeSlug} />}
     </AlgoPageShell>
   );
 };

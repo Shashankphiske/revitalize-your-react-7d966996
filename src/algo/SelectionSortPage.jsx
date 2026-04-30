@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import BarsViz from "../components/BarsViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function selectionSort(arr) {",
@@ -124,6 +125,7 @@ const SelectionSortPage = () => {
           <CodeViewer code={CODE} highlightedLine={getHighlightedLine(step)} title="selection-sort.js" />
         </div>
       </section>
+      <LeetCodeSection slug="selectionSort" />
     </AlgoPageShell>
   );
 };

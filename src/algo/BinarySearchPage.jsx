@@ -6,6 +6,7 @@ import ControlBar from "../components/ControlBar";
 import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function binarySearch(arr, target) {",
@@ -134,6 +135,7 @@ const BinarySearchPage = () => {
           <CodeViewer code={CODE} highlightedLine={getHighlightedLine(step)} title="binary-search.js" />
         </div>
       </section>
+      <LeetCodeSection slug="binarySearch" />
     </AlgoPageShell>
   );
 };

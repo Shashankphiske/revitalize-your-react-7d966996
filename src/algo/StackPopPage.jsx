@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import StackViz from "../components/StackViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function pop(stack) {",
@@ -86,6 +87,7 @@ const StackPopPage = () => {
           <CodeViewer code={CODE} highlightedLine={highlightedLine} title="stack-pop.js" />
         </div>
       </section>
+      <LeetCodeSection slug="stackPop" />
     </AlgoPageShell>
   );
 };

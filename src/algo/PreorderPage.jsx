@@ -19,6 +19,7 @@ const PreorderPage = () => (
     endpoint="preorder"
     code={CODE}
     codeLine={2}
+    leetcodeSlug="preorder"
   />
 );
 

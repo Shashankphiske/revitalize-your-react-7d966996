@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import StackViz from "../components/StackViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function push(stack, value) {",
@@ -86,6 +87,7 @@ const StackPushPage = () => {
           <CodeViewer code={CODE} highlightedLine={highlightedLine} title="stack-push.js" />
         </div>
       </section>
+      <LeetCodeSection slug="stackPush" />
     </AlgoPageShell>
   );
 };

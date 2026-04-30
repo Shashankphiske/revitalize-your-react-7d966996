@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import BarsViz from "../components/BarsViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function quickSort(arr, lo, hi) {",
@@ -130,6 +131,7 @@ const QuickSortPage = () => {
           <CodeViewer code={CODE} highlightedLine={getHighlightedLine(step)} title="quick-sort.js" />
         </div>
       </section>
+      <LeetCodeSection slug="quickSort" />
     </AlgoPageShell>
   );
 };

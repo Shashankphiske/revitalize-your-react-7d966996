@@ -19,6 +19,7 @@ const PostorderPage = () => (
     endpoint="postorder"
     code={CODE}
     codeLine={4}
+    leetcodeSlug="postorder"
   />
 );
 

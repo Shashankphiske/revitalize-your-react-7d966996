@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import BarsViz from "../components/BarsViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function mergeSort(arr) {",
@@ -128,6 +129,7 @@ const MergeSortPage = () => {
           <CodeViewer code={CODE} highlightedLine={getHighlightedLine(step)} title="merge-sort.js" />
         </div>
       </section>
+      <LeetCodeSection slug="mergeSort" />
     </AlgoPageShell>
   );
 };

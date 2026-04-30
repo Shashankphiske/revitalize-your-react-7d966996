@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import ListViz from "../components/ListViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function insert(head, value, pos) {",
@@ -97,6 +98,7 @@ const SinglyInsertionPage = () => {
           <CodeViewer code={CODE} highlightedLine={highlightedLine} title="singly-insertion.js" />
         </div>
       </section>
+      <LeetCodeSection slug="singlyInsertion" />
     </AlgoPageShell>
   );
 };

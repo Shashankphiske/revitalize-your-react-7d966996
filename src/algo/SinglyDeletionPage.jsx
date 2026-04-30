@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import ListViz from "../components/ListViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function deleteNode(head, value) {",
@@ -96,6 +97,7 @@ const SinglyDeletionPage = () => {
           <CodeViewer code={CODE} highlightedLine={highlightedLine} title="singly-deletion.js" />
         </div>
       </section>
+      <LeetCodeSection slug="singlyDeletion" />
     </AlgoPageShell>
   );
 };

@@ -6,6 +6,7 @@ import ControlBar from "../components/ControlBar";
 import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function coinChange(coins, amount) {",
@@ -116,6 +117,7 @@ const CoinChangePage = () => {
           <CodeViewer code={CODE} highlightedLine={highlightedLine} title="coin-change.js" />
         </div>
       </section>
+      <LeetCodeSection slug="coinChange" />
     </AlgoPageShell>
   );
 };

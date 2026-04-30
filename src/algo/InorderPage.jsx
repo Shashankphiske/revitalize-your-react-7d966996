@@ -19,6 +19,7 @@ const InorderPage = () => (
     endpoint="inorder"
     code={CODE}
     codeLine={3}
+    leetcodeSlug="inorder"
   />
 );
 

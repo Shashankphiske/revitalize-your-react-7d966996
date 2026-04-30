@@ -6,6 +6,7 @@ import ControlBar from "../components/ControlBar";
 import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function fibonacci(n) {",
@@ -123,6 +124,7 @@ const FibonacciPage = () => {
           <CodeViewer code={CODE} highlightedLine={highlightedLine} title="fibonacci.js" />
         </div>
       </section>
+      <LeetCodeSection slug="fibonacci" />
     </AlgoPageShell>
   );
 };

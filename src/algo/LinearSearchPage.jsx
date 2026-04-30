@@ -6,6 +6,7 @@ import ControlBar from "../components/ControlBar";
 import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function linearSearch(arr, target) {",
@@ -129,6 +130,7 @@ const LinearSearchPage = () => {
           <CodeViewer code={CODE} highlightedLine={getHighlightedLine(step)} title="linear-search.js" />
         </div>
       </section>
+      <LeetCodeSection slug="linearSearch" />
     </AlgoPageShell>
   );
 };

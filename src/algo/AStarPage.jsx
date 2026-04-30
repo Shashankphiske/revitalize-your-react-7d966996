@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import GraphViz from "../components/GraphViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function aStar(adj, start, end, h) {",
@@ -134,6 +135,7 @@ const AStarPage = () => {
           <CodeViewer code={CODE} highlightedLine={highlightedLine} title="a-star.js" />
         </div>
       </section>
+      <LeetCodeSection slug="aStar" />
     </AlgoPageShell>
   );
 };

@@ -6,6 +6,7 @@ import ControlBar from "../components/ControlBar";
 import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 // SVG layout constants
 const SVG_W = 520;
@@ -224,6 +225,7 @@ const HeapSortPage = () => {
           <CodeViewer code={HEAP_SORT_CODE} highlightedLine={getHighlightedLine(step)} title="heap-sort.js" />
         </div>
       </section>
+      <LeetCodeSection slug="heapSort" />
     </AlgoPageShell>
   );
 };

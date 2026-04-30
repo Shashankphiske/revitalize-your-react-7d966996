@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import ListViz from "../components/ListViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function reverse(head) {",
@@ -93,6 +94,7 @@ const SinglyReversalPage = () => {
           <CodeViewer code={CODE} highlightedLine={highlightedLine} title="singly-reversal.js" />
         </div>
       </section>
+      <LeetCodeSection slug="singlyReversal" />
     </AlgoPageShell>
   );
 };

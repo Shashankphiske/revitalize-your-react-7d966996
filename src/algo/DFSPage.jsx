@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import GraphViz from "../components/GraphViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function dfs(graph, start, target) {",
@@ -124,6 +125,7 @@ const DFSPage = () => {
           <CodeViewer code={CODE} highlightedLine={highlightedLine} title="dfs.js" />
         </div>
       </section>
+      <LeetCodeSection slug="dfs" />
     </AlgoPageShell>
   );
 };

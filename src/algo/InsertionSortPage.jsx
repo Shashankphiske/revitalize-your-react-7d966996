@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import BarsViz from "../components/BarsViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function insertionSort(arr) {",
@@ -118,6 +119,7 @@ const InsertionSortPage = () => {
           <CodeViewer code={CODE} highlightedLine={getHighlightedLine(step)} title="insertion-sort.js" />
         </div>
       </section>
+      <LeetCodeSection slug="insertionSort" />
     </AlgoPageShell>
   );
 };

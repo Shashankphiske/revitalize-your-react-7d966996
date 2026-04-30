@@ -7,6 +7,7 @@ import ExplanationBox from "../components/ExplanationBox";
 import Legend from "../components/Legend";
 import ListViz from "../components/ListViz";
 import useAlgoPlayer from "../hooks/useAlgoPlayer";
+import LeetCodeSection from "../components/LeetCodeSection";
 
 const CODE = [
   "function enqueue(queue, value) {",
@@ -97,6 +98,7 @@ const QueueEnqueuePage = () => {
           <CodeViewer code={CODE} highlightedLine={highlightedLine} title="queue-enqueue.js" />
         </div>
       </section>
+      <LeetCodeSection slug="queueEnqueue" />
     </AlgoPageShell>
   );
 };

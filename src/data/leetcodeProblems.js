@@ -279,8 +279,8 @@ export const LEETCODE_PROBLEMS = {
     LC(2092,"Find All People With Secret",       "Hard",   "find-all-people-with-secret"),
     LC(778, "Swim in Rising Water",              "Hard",   "swim-in-rising-water"),
     LC(1928,"Min Cost to Reach Destination in Time","Hard","minimum-cost-to-reach-destination-in-time"),
-    LC(2another, "Reachable Nodes In Subdivided Graph","Hard","reachable-nodes-in-subdivided-graph").id ? null : null,
-  ].filter(Boolean),
+    LC(882, "Reachable Nodes In Subdivided Graph","Hard","reachable-nodes-in-subdivided-graph"),
+  ],
   aStar: [
     LC(1091,"Shortest Path in Binary Matrix",    "Medium", "shortest-path-in-binary-matrix"),
     LC(2290,"Min Obstacle Removal to Reach Corner","Hard","minimum-obstacle-removal-to-reach-corner"),
